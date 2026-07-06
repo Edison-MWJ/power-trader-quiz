@@ -1,0 +1,1 @@
+window.QUESTION_META = {"title":"电力交易员高级工+技师题库","sourceFiles":["电力交易员（高级工）题库.xlsx","电力交易员（技师）题库.xlsx"],"generatedAt":"2026-07-06 20:51:39","rawTotal":2910,"total":1847,"deduped":1063,"sourceCounts":{"高级工":1290,"技师":1620},"byType":{"单选":881,"多选":366,"判断":600},"byScope":{"高级工+技师":1046,"高级工独有":239,"技师新增":562}};
