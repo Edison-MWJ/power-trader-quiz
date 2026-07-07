@@ -56,7 +56,7 @@
       }
       return shuffle(pool).slice(0, section.count);
     });
-    return shuffle(sections.flat());
+    return sections.flat();
   }
 
   function summarizeExam(paper, answers) {

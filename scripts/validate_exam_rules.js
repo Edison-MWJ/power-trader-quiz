@@ -37,6 +37,13 @@ function validatePaper(source) {
     );
   });
   assert(paper.length === 85, `${source} expected 85 questions, got ${paper.length}`);
+  const expectedOrder = EXAM_RULE.sections.flatMap((section) => Array(section.count).fill(section.type));
+  paper.forEach((question, index) => {
+    assert(
+      question.type === expectedOrder[index],
+      `${source} question ${index + 1} expected ${expectedOrder[index]}, got ${question.type}`
+    );
+  });
 }
 
 validatePaper("高级工");
