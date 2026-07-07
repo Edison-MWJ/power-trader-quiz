@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#14213d">
-  <title>电力交易员高级工刷题</title>
+  <title>电力交易刷题</title>
   <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IueUteWKm+S6pOaYk+WRmOWIt+mimCI+CiAgPHJlY3Qgd2lkdGg9IjUxMiIgaGVpZ2h0PSI1MTIiIHJ4PSIxMTIiIGZpbGw9IiMxNDIxM2QiLz4KICA8cGF0aCBkPSJNMTM4IDExOGgyMzZjMjAgMCAzNiAxNiAzNiAzNnYyNDBjMCAyMC0xNiAzNi0zNiAzNkgxMzhjLTIwIDAtMzYtMTYtMzYtMzZWMTU0YzAtMjAgMTYtMzYgMzYtMzZaIiBmaWxsPSIjZjhmNGU4Ii8+CiAgPHBhdGggZD0iTTE1NCAxODRoMjA0TTE1NCAyNDZoMTMyTTE1NCAzMDhoMTc4IiBzdHJva2U9IiMxNDIxM2QiIHN0cm9rZS13aWR0aD0iMjgiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogIDxwYXRoIGQ9Ik0zMTYgMjIyIDI2MCAzMzJoNjJsLTIyIDcyIDgyLTEyNGgtNjJsMjgtNThoLTMyWiIgZmlsbD0iI2ZjYTMxMSIvPgogIDxjaXJjbGUgY3g9IjM3OCIgY3k9IjE1MCIgcj0iMzQiIGZpbGw9IiMyYTlkOGYiLz4KPC9zdmc+Cg==" type="image/svg+xml">
   <style>
     :root {
@@ -186,7 +186,7 @@
     }
 
     .scope-filter {
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(3, 1fr);
     }
 
     .filter button,
@@ -463,8 +463,6 @@
           <p id="metaText">题库加载中</p>
         </div>
       </div>
-      <button class="status-pill" id="installButton" hidden>安装</button>
-      <span class="status-pill" id="offlineText">在线题库</span>
     </header>
 
     <section class="stats" aria-label="刷题统计">
@@ -487,26 +485,18 @@
           <button data-filter="判断">判断</button>
         </div>
         <div class="scope-filter" aria-label="题库来源筛选">
-          <button data-scope="all" class="active">全部题库</button>
-          <button data-scope="高级工+技师">两库交集</button>
-          <button data-scope="高级工独有">高级独有</button>
-          <button data-scope="技师新增">技师新增</button>
+          <button data-source="高级工" class="active">高级工</button>
+          <button data-source="技师">技师</button>
+          <button data-source="技师新增">技师新增</button>
         </div>
         <div class="search-row">
           <input id="searchInput" type="search" placeholder="搜索题干关键词">
           <button class="small-button" id="resetButton">重置</button>
         </div>
-        <button class="small-button" id="helpButton">查看说明</button>
       </section>
 
       <section>
         <article class="panel question" id="questionCard" aria-live="polite"></article>
-        <aside class="panel drawer" id="helpDrawer">
-          <h2>使用说明</h2>
-          <p>随机适合日常刷题，顺序适合按题库推进，错题模式只抽取答错过的题。</p>
-          <p>题库已合并高级工和技师，完全重复题只保留一次。可按两库交集、高级独有、技师新增筛选。</p>
-          <p>多选题可以点多个选项，提交后会按完整答案判定。进度、正确率和错题保存在当前浏览器本地。</p>
-        </aside>
       </section>
     </main>
 
@@ -537,7 +527,7 @@
     const state = {
       mode: "random",
       filter: "all",
-      scope: "all",
+      source: "高级工",
       search: "",
       current: null,
       selected: new Set(),
@@ -556,14 +546,8 @@
       submitButton: document.getElementById("submitButton"),
       skipButton: document.getElementById("skipButton"),
       resetButton: document.getElementById("resetButton"),
-      searchInput: document.getElementById("searchInput"),
-      helpButton: document.getElementById("helpButton"),
-      helpDrawer: document.getElementById("helpDrawer"),
-      installButton: document.getElementById("installButton"),
-      offlineText: document.getElementById("offlineText")
+      searchInput: document.getElementById("searchInput")
     };
-
-    let deferredInstallPrompt = null;
 
     function loadStats() {
       try {
@@ -587,11 +571,16 @@
       const term = state.search.trim();
       return questions.filter((question) => {
         const typeOk = state.filter === "all" || question.type === state.filter;
-        const scopeOk = state.scope === "all" || question.scope === state.scope;
+        const sourceOk = matchesSource(question, state.source);
         const searchOk = !term || question.stem.includes(term);
         const wrongOk = state.mode !== "wrong" || state.stats.wrongIds.includes(question.id);
-        return typeOk && scopeOk && searchOk && wrongOk;
+        return typeOk && sourceOk && searchOk && wrongOk;
       });
+    }
+
+    function matchesSource(question, source) {
+      if (source === "技师新增") return question.scope === "技师新增";
+      return (question.levels || []).includes(source);
     }
 
     function pickQuestion() {
@@ -633,11 +622,11 @@
       pickQuestion();
     }
 
-    function setScope(scope) {
-      state.scope = scope;
+    function setSource(source) {
+      state.source = source;
       state.orderIndex = 0;
-      document.querySelectorAll("[data-scope]").forEach((button) => {
-        button.classList.toggle("active", button.dataset.scope === scope);
+      document.querySelectorAll("[data-source]").forEach((button) => {
+        button.classList.toggle("active", button.dataset.source === source);
       });
       pickQuestion();
     }
@@ -696,10 +685,16 @@
       els.doneCount.textContent = answered;
       els.accuracy.textContent = answered ? `${Math.round(state.stats.correct / answered * 100)}%` : "0%";
       els.wrongCount.textContent = state.stats.wrongIds.length;
-      const total = bank.meta.total || questions.length;
-      const added = bank.meta.byScope?.技师新增 || 0;
-      const shared = bank.meta.byScope?.["高级工+技师"] || 0;
-      els.metaText.textContent = `${total} 道去重题 · 交集 ${shared} · 技师新增 ${added}`;
+      els.metaText.textContent = `${sourceLabel(state.source)} · ${countBySource(state.source)} 道去重题`;
+    }
+
+    function sourceLabel(source) {
+      if (source === "技师新增") return "技师新增";
+      return `${source}题库`;
+    }
+
+    function countBySource(source) {
+      return questions.filter((question) => matchesSource(question, source)).length;
     }
 
     function renderQuestion() {
@@ -733,8 +728,7 @@
       const feedback = state.submitted
         ? `<div class="feedback ${state.correct ? "good" : "bad"}">
             <strong>${state.correct ? "答对了" : "答错了"}</strong><br>
-            正确答案：${escapeHtml(answerText(question))}<br>
-            来源：${escapeHtml((question.levels || []).join("、"))}
+            正确答案：${escapeHtml(answerText(question))}
           </div>`
         : "";
 
@@ -742,8 +736,7 @@
         <div class="question-head">
           <div class="tag-row">
             <span class="tag ${tagClass}">${question.type}</span>
-            <span class="tag scope">${question.scope || "题库"}</span>
-            <span class="tag">${(question.levels || []).join("、")}</span>
+            <span class="tag scope">${sourceLabel(state.source)}</span>
           </div>
           <span class="progress-text">${poolCount} 题可练</span>
         </div>
@@ -780,8 +773,8 @@
       button.addEventListener("click", () => setFilter(button.dataset.filter));
     });
 
-    document.querySelectorAll("[data-scope]").forEach((button) => {
-      button.addEventListener("click", () => setScope(button.dataset.scope));
+    document.querySelectorAll("[data-source]").forEach((button) => {
+      button.addEventListener("click", () => setSource(button.dataset.source));
     });
 
     els.submitButton.addEventListener("click", () => {
@@ -791,29 +784,11 @@
 
     els.skipButton.addEventListener("click", pickQuestion);
     els.resetButton.addEventListener("click", resetStats);
-    els.helpButton.addEventListener("click", () => els.helpDrawer.classList.toggle("open"));
     els.searchInput.addEventListener("input", (event) => {
       state.search = event.target.value;
       state.orderIndex = 0;
       pickQuestion();
     });
-
-    window.addEventListener("beforeinstallprompt", (event) => {
-      event.preventDefault();
-      deferredInstallPrompt = event;
-      els.installButton.hidden = false;
-    });
-
-    els.installButton.addEventListener("click", async () => {
-      if (!deferredInstallPrompt) return;
-      deferredInstallPrompt.prompt();
-      await deferredInstallPrompt.userChoice;
-      deferredInstallPrompt = null;
-      els.installButton.hidden = true;
-    });
-
-    window.addEventListener("online", () => { els.offlineText.textContent = "离线可用"; });
-    window.addEventListener("offline", () => { els.offlineText.textContent = "已离线"; });
 
 
     pickQuestion();

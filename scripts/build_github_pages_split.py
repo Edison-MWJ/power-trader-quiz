@@ -17,6 +17,14 @@ OUTPUT = ROOT / "dist" / "github_pages_split_v1"
 CHUNK_SIZE = 180
 
 
+SCRIPT_BLOCK_RE = re.compile(
+    r'\n  <script src="data/meta\.js"></script>\n'
+    r"  <script>window\.QUESTION_PARTS = \[\];</script>\n"
+    r'(?:  <script src="data/questions-\d{2}\.js"></script>\n)+'
+    r"  <script>window\.QUESTION_BANK = \{ meta: window\.QUESTION_META, questions: window\.QUESTION_PARTS\.flat\(\) \};</script>"
+)
+
+
 def load_bank() -> dict[str, object]:
     text = QUESTIONS.read_text(encoding="utf-8").strip()
     match = re.match(r"window\.QUESTION_BANK\s*=\s*(.*);$", text, re.S)
@@ -48,10 +56,14 @@ def main() -> None:
     html = html.replace('  <link rel="manifest" href="manifest.webmanifest">\n', "")
     html = html.replace('<link rel="icon" href="icon.svg" type="image/svg+xml">', f'<link rel="icon" href="{icon_data}" type="image/svg+xml">')
     html = html.replace('<img src="icon.svg" alt="">', f'<img src="{icon_data}" alt="">')
-    html = html.replace('  <script src="data/questions.js"></script>', "\n".join(script_tags))
+    script_block = "\n".join(script_tags)
+    if '  <script src="data/questions.js"></script>' in html:
+        html = html.replace('  <script src="data/questions.js"></script>', script_block)
+    else:
+        html = SCRIPT_BLOCK_RE.sub("\n" + script_block, html)
     html = html.replace("离线可用</span>", "在线题库</span>")
 
-    service_worker_block = """\n    if ("serviceWorker" in navigator) {\n      navigator.serviceWorker.register("./service-worker.js").catch(() => {\n        els.offlineText.textContent = "离线缓存未启用";\n      });\n    }\n"""
+    service_worker_block = """\n    if ("serviceWorker" in navigator) {\n      navigator.serviceWorker.register("./service-worker.js").catch(() => {});\n    }\n"""
     html = html.replace(service_worker_block, "\n")
 
     data_dir = OUTPUT / "data"

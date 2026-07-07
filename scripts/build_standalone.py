@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import base64
+import re
 from pathlib import Path
 
 
@@ -11,7 +12,15 @@ ROOT = Path(__file__).resolve().parents[1]
 INDEX = ROOT / "index.html"
 QUESTIONS = ROOT / "data" / "questions.js"
 ICON = ROOT / "icon.svg"
-OUTPUT = ROOT / "dist" / "电力交易员高级工技师刷题_单文件版_v2.html"
+OUTPUT = ROOT / "dist" / "电力交易员高级工技师刷题_单文件版_v3.html"
+
+
+SCRIPT_BLOCK_RE = re.compile(
+    r'\n  <script src="data/meta\.js"></script>\n'
+    r"  <script>window\.QUESTION_PARTS = \[\];</script>\n"
+    r'(?:  <script src="data/questions-\d{2}\.js"></script>\n)+'
+    r"  <script>window\.QUESTION_BANK = \{ meta: window\.QUESTION_META, questions: window\.QUESTION_PARTS\.flat\(\) \};</script>"
+)
 
 
 def main() -> None:
@@ -23,9 +32,13 @@ def main() -> None:
     html = html.replace('  <link rel="manifest" href="manifest.webmanifest">\n', "")
     html = html.replace('<link rel="icon" href="icon.svg" type="image/svg+xml">', f'<link rel="icon" href="{icon_data}" type="image/svg+xml">')
     html = html.replace('<img src="icon.svg" alt="">', f'<img src="{icon_data}" alt="">')
-    html = html.replace('  <script src="data/questions.js"></script>', f"  <script>\n    {questions}\n  </script>")
+    inline_questions = f"  <script>\n    {questions}\n  </script>"
+    if '  <script src="data/questions.js"></script>' in html:
+        html = html.replace('  <script src="data/questions.js"></script>', inline_questions)
+    else:
+        html = SCRIPT_BLOCK_RE.sub("\n" + inline_questions, html)
 
-    service_worker_block = """\n    if ("serviceWorker" in navigator) {\n      navigator.serviceWorker.register("./service-worker.js").catch(() => {\n        els.offlineText.textContent = "离线缓存未启用";\n      });\n    }\n"""
+    service_worker_block = """\n    if ("serviceWorker" in navigator) {\n      navigator.serviceWorker.register("./service-worker.js").catch(() => {});\n    }\n"""
     html = html.replace(service_worker_block, "\n")
     html = html.replace("离线可用</span>", "单文件版</span>")
 
