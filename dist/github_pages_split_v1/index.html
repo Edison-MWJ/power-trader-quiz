@@ -213,11 +213,11 @@
     }
 
     .scope-filter {
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(4, 1fr);
     }
 
     .exam-source {
-      grid-template-columns: repeat(1, 1fr);
+      grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
     }
 
     .filter button,
@@ -672,6 +672,7 @@
           <button data-filter="判断">判断</button>
         </div>
         <div class="scope-filter" aria-label="题库来源筛选">
+          <button data-source="中级工">中级工</button>
           <button data-source="高级工" class="active">高级工</button>
           <button data-source="技师">技师</button>
           <button data-source="技师新增">技师新增</button>
@@ -688,6 +689,7 @@
           单选 50 题，每题 1 分；多选 15 题，每题 2 分；判断 20 题，每题 1 分。共 85 题，满分 100 分，限时 120 分钟。
         </div>
         <div class="exam-source" aria-label="考试题库来源">
+          <button data-exam-source="中级工">中级工</button>
           <button data-exam-source="高级工" class="active">高级工</button>
           <button data-exam-source="技师">技师</button>
           <button data-exam-source="技师新增">技师新增</button>
@@ -721,6 +723,8 @@
   <script src="data/questions-09.js"></script>
   <script src="data/questions-10.js"></script>
   <script src="data/questions-11.js"></script>
+  <script src="data/questions-12.js"></script>
+  <script src="data/questions-13.js"></script>
   <script>window.QUESTION_BANK = { meta: window.QUESTION_META, questions: window.QUESTION_PARTS.flat() };</script>
   <script src="quiz-core.js"></script>
   <script>

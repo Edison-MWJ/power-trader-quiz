@@ -46,6 +46,7 @@ function validatePaper(source) {
   });
 }
 
+validatePaper("中级工");
 validatePaper("高级工");
 validatePaper("技师");
 validatePaper("技师新增");

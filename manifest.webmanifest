@@ -1,6 +1,6 @@
 {
-  "name": "电力交易员高级工刷题",
-  "short_name": "高级工刷题",
+  "name": "电力交易员刷题",
+  "short_name": "交易员刷题",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#f8f4e8",

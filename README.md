@@ -12,7 +12,7 @@ python3 -m http.server 8765
 
 ## 单文件版
 
-如果只想自己使用，不想保持电脑服务在线，可以使用 `dist/电力交易员高级工技师刷题_单文件版_v6.html`。这个文件已经内嵌高级工和技师题库数据，复制到手机后用浏览器打开即可刷题。
+如果只想自己使用，不想保持电脑服务在线，可以使用 `dist/电力交易员中级工高级工技师刷题_单文件版_v7.html`。这个文件已经内嵌中级工、高级工和技师题库数据，复制到手机后用浏览器打开即可刷题。
 
 注意：iPhone 的“文件”App 经常只预览 HTML，不完整执行里面的 JavaScript，所以本地 HTML 在 iPhone 上不稳定。想在 iPhone 微信里直接打开，建议发布成 HTTPS 静态网页链接。
 
@@ -24,24 +24,9 @@ python3 scripts/build_standalone.py
 
 ## 微信打开
 
-微信里稳定打开需要 `https://...` 链接。可把 `dist/wechat_static_site_v1.zip` 上传到 Cloudflare Pages、GitHub Pages 或自己的静态网站服务。发布后把生成的 HTTPS 链接发到微信即可。
+微信里稳定打开需要 `https://...` 链接。当前可以直接把 GitHub Pages 地址发到微信：
 
-## 微信小程序版
-
-项目已包含原生微信小程序目录：`miniprogram/`。
-
-使用方式：
-
-1. 打开微信开发者工具。
-2. 选择“导入项目”。
-3. 项目目录选择本仓库下的 `miniprogram/`。
-4. 没有正式 AppID 时，可以先本地调试；需要真机预览或上传发布时，把自己的 AppID 填到 `miniprogram/project.config.json` 的 `appid` 字段。
-
-小程序版不依赖后端和网络，题库、错题、收藏、模拟考试成绩都保存在微信本地缓存。更新题库或核心规则后，重新运行：
-
-```bash
-node scripts/build_miniprogram_data.js
-```
+`https://edison-mwj.github.io/power-trader-quiz/`
 
 ## GitHub Pages 发布
 
@@ -69,6 +54,8 @@ node scripts/build_miniprogram_data.js
 
 ```bash
 python3 scripts/extract_questions.py
+python3 scripts/build_github_pages_split.py
+python3 scripts/build_standalone.py
 ```
 
 然后刷新网页即可。错题和进度保存在当前浏览器本地，换手机或清理浏览器数据后不会自动同步。

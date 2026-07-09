@@ -10,8 +10,9 @@
   };
 
   function matchesSource(question, source) {
-    if (source === "技师新增") return question.scope === "技师新增";
-    return (question.levels || []).includes(source);
+    const levels = question.levels || [];
+    if (source === "技师新增") return levels.includes("技师") && !levels.includes("高级工");
+    return levels.includes(source);
   }
 
   function sourceLabel(source) {

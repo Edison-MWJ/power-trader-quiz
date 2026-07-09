@@ -16,11 +16,24 @@ SOURCE_DIR = Path(
     "交易员考试/交易员考试"
 )
 SOURCES = {
+    "中级工": SOURCE_DIR / "电力交易员（中级工）题库.xlsx",
     "高级工": SOURCE_DIR / "电力交易员（高级工）题库.xlsx",
     "技师": SOURCE_DIR / "电力交易员（技师）题库.xlsx",
 }
-OUTPUT = Path(__file__).resolve().parents[1] / "data" / "questions.js"
+ROOT = Path(__file__).resolve().parents[1]
+OUTPUT = ROOT / "data" / "questions.js"
+DATA_DIR = OUTPUT.parent
+INDEX = ROOT / "index.html"
+SERVICE_WORKER = ROOT / "service-worker.js"
+CHUNK_SIZE = 180
 LETTERS = "ABCDEFGHIJ"
+SCRIPT_BLOCK_RE = re.compile(
+    r'\n  <script src="data/meta\.js"></script>\n'
+    r"  <script>window\.QUESTION_PARTS = \[\];</script>\n"
+    r'(?:  <script src="data/questions-\d{2}\.js"></script>\n)+'
+    r"  <script>window\.QUESTION_BANK = \{ meta: window\.QUESTION_META, questions: window\.QUESTION_PARTS\.flat\(\) \};</script>"
+)
+APP_SHELL_RE = re.compile(r"const APP_SHELL = \[\n.*?\n\];", re.S)
 
 
 def clean(value: object) -> str:
@@ -41,11 +54,13 @@ def normalize_answer(value: object, qtype: str) -> list[str]:
 
 
 def question_scope(levels: list[str]) -> str:
-    if levels == ["高级工"]:
-        return "高级工独有"
     if levels == ["技师"]:
         return "技师新增"
-    return "高级工+技师"
+    if "技师" in levels and "高级工" not in levels:
+        return "技师新增"
+    if len(levels) == 1:
+        return f"{levels[0]}独有"
+    return "+".join(levels)
 
 
 def extract_bank(level: str, source: Path) -> list[dict[str, object]]:
@@ -119,7 +134,7 @@ def extract() -> dict[str, object]:
         if level not in item["levels"]:  # type: ignore[operator]
             item["levels"].append(level)  # type: ignore[index,union-attr]
 
-    level_order = {"高级工": 0, "技师": 1}
+    level_order = {"中级工": 0, "高级工": 1, "技师": 2}
     questions: list[dict[str, object]] = []
     for index, item in enumerate(merged.values(), start=1):
         levels = sorted(item["levels"], key=lambda value: level_order[str(value)])  # type: ignore[arg-type]
@@ -138,7 +153,7 @@ def extract() -> dict[str, object]:
 
     return {
         "meta": {
-            "title": "电力交易员高级工+技师题库",
+            "title": "电力交易员中级工+高级工+技师题库",
             "sourceFiles": [source.name for source in SOURCES.values()],
             "generatedAt": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "rawTotal": len(raw_questions),
@@ -157,9 +172,77 @@ def main() -> None:
     data = extract()
     payload = json.dumps(data, ensure_ascii=False, separators=(",", ":"))
     OUTPUT.write_text(f"window.QUESTION_BANK = {payload};\n", encoding="utf-8")
+    write_split_files(data)
+    update_index_script_tags(data)
+    update_service_worker(data)
     meta = data["meta"]
     print(f"Wrote {OUTPUT}")
+    print(f"Wrote split data chunks: {(len(data['questions']) + CHUNK_SIZE - 1) // CHUNK_SIZE}")
     print(f"Total: {meta['total']} | By type: {meta['byType']}")
+
+
+def write_split_files(data: dict[str, object]) -> None:
+    questions = data["questions"]
+    meta = data["meta"]
+    for old_chunk in DATA_DIR.glob("questions-*.js"):
+        old_chunk.unlink()
+
+    (DATA_DIR / "meta.js").write_text(
+        "window.QUESTION_META = "
+        + json.dumps(meta, ensure_ascii=False, separators=(",", ":"))
+        + ";\n",
+        encoding="utf-8",
+    )
+    for index in range(0, len(questions), CHUNK_SIZE):  # type: ignore[arg-type]
+        part_no = index // CHUNK_SIZE + 1
+        chunk = questions[index : index + CHUNK_SIZE]  # type: ignore[index]
+        (DATA_DIR / f"questions-{part_no:02d}.js").write_text(
+            "window.QUESTION_PARTS.push("
+            + json.dumps(chunk, ensure_ascii=False, separators=(",", ":"))
+            + ");\n",
+            encoding="utf-8",
+        )
+
+
+def chunk_count(data: dict[str, object]) -> int:
+    return (len(data["questions"]) + CHUNK_SIZE - 1) // CHUNK_SIZE  # type: ignore[arg-type]
+
+
+def split_script_block(data: dict[str, object]) -> str:
+    script_tags = [
+        '  <script src="data/meta.js"></script>',
+        '  <script>window.QUESTION_PARTS = [];</script>',
+    ]
+    for part_no in range(1, chunk_count(data) + 1):
+        script_tags.append(f'  <script src="data/questions-{part_no:02d}.js"></script>')
+    script_tags.append(
+        '  <script>window.QUESTION_BANK = { meta: window.QUESTION_META, questions: window.QUESTION_PARTS.flat() };</script>'
+    )
+    return "\n".join(script_tags)
+
+
+def update_index_script_tags(data: dict[str, object]) -> None:
+    html = INDEX.read_text(encoding="utf-8")
+    updated = SCRIPT_BLOCK_RE.sub("\n" + split_script_block(data), html)
+    INDEX.write_text(updated, encoding="utf-8")
+
+
+def update_service_worker(data: dict[str, object]) -> None:
+    urls = [
+        "./",
+        "./index.html",
+        "./manifest.webmanifest",
+        "./icon.svg",
+        "./quiz-core.js",
+        "./data/meta.js",
+        "./data/questions.js",
+    ]
+    urls.extend(f"./data/questions-{part_no:02d}.js" for part_no in range(1, chunk_count(data) + 1))
+    block = "const APP_SHELL = [\n" + ",\n".join(f'  "{url}"' for url in urls) + "\n];"
+    script = SERVICE_WORKER.read_text(encoding="utf-8")
+    script = re.sub(r'const CACHE_NAME = ".*?";', 'const CACHE_NAME = "power-trader-quiz-v7";', script)
+    script = APP_SHELL_RE.sub(block, script)
+    SERVICE_WORKER.write_text(script, encoding="utf-8")
 
 
 if __name__ == "__main__":
