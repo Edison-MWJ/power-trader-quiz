@@ -5,6 +5,8 @@ const path = require("path");
 const {
   EXAM_RULE,
   buildExamPaper,
+  matchesSource,
+  matchesMaterial,
   scoreQuestion,
   summarizeExam,
   analyzeExamHistory
@@ -48,6 +50,7 @@ function validatePaper(source) {
 
 function validatePdfPaper(source) {
   const paper = buildExamPaper(bank.questions, source, "pdf");
+  const pool = bank.questions.filter((question) => matchesSource(question, source) && matchesMaterial(question, "pdf", source));
   const counts = countsByType(paper);
   EXAM_RULE.sections.forEach((section) => {
     assert(
@@ -57,9 +60,12 @@ function validatePdfPaper(source) {
   });
   assert(paper.length === 85, `${source} PDF expected 85 questions, got ${paper.length}`);
   assert(
-    paper.every((question) => (question.origins || []).some((origin) => /\.pdf$/i.test(origin))),
-    `${source} PDF paper contains non-PDF question`
+    paper.every((question) => matchesMaterial(question, "pdf", source)),
+    `${source} PDF paper contains a question outside its PDF level`
   );
+  if (source === "高级工") assert(pool.length === 1403, `高级工 PDF pool expected 1403, got ${pool.length}`);
+  if (source === "技师") assert(pool.length === 1460, `技师 PDF pool expected 1460, got ${pool.length}`);
+  if (source === "技师新增") assert(pool.length === 823, `技师新增 PDF pool expected 823, got ${pool.length}`);
 }
 
 validatePaper("中级工");

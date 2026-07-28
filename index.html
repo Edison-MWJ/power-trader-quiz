@@ -868,7 +868,7 @@
       return questions.filter((question) => {
         const typeOk = state.filter === "all" || question.type === state.filter;
         const sourceOk = matchesSource(question, state.source);
-        const materialOk = matchesMaterial(question, state.material);
+        const materialOk = matchesMaterial(question, state.material, state.source);
         const searchOk = !term || question.stem.includes(term);
         const wrongOk = state.mode !== "wrong" || state.stats.wrongIds.includes(question.id);
         const favoriteOk = state.mode !== "favorite" || state.stats.favoriteIds.includes(question.id);
@@ -1232,7 +1232,7 @@
     }
 
     function countBySource(source, material = "all") {
-      return questions.filter((question) => matchesSource(question, source) && matchesMaterial(question, material)).length;
+      return questions.filter((question) => matchesSource(question, source) && matchesMaterial(question, material, source)).length;
     }
 
     function renderQuestion() {

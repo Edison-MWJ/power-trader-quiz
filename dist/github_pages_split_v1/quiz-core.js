@@ -15,10 +15,14 @@
     return levels.includes(source);
   }
 
-  function matchesMaterial(question, material) {
+  function matchesMaterial(question, material, source) {
     if (!material || material === "all") return true;
     const origins = question.origins || [];
-    if (material === "pdf") return origins.some((origin) => /\.pdf$/i.test(origin));
+    if (material === "pdf") {
+      if (source === "高级工") return origins.some((origin) => /三级-电力交易员.*\.pdf$/i.test(origin));
+      if (source === "技师" || source === "技师新增") return origins.some((origin) => /二级-电力交易员.*\.pdf$/i.test(origin));
+      return false;
+    }
     return true;
   }
 
@@ -66,7 +70,7 @@
       const pool = questions.filter((question) =>
         question.type === section.type
         && matchesSource(question, source)
-        && matchesMaterial(question, material)
+        && matchesMaterial(question, material, source)
       );
       if (pool.length < section.count) {
         throw new Error(`${sourceLabel(source)}${material === "pdf" ? "PDF样卷" : ""}${section.type}题不足，需要 ${section.count} 题，当前 ${pool.length} 题`);
