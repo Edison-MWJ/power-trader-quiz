@@ -65,16 +65,13 @@ function validatePdfPaper(source) {
   );
   if (source === "高级工") assert(pool.length === 1403, `高级工 PDF pool expected 1403, got ${pool.length}`);
   if (source === "技师") assert(pool.length === 1460, `技师 PDF pool expected 1460, got ${pool.length}`);
-  if (source === "技师新增") assert(pool.length === 823, `技师新增 PDF pool expected 823, got ${pool.length}`);
 }
 
 validatePaper("中级工");
 validatePaper("高级工");
 validatePaper("技师");
-validatePaper("技师新增");
 validatePdfPaper("高级工");
 validatePdfPaper("技师");
-validatePdfPaper("技师新增");
 assert(EXAM_RULE.durationSeconds === 7200, `expected 120 minute exam, got ${EXAM_RULE.durationSeconds}`);
 
 const multi = { type: "多选", answer: ["A", "C", "D"] };

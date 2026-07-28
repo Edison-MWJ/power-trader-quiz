@@ -11,7 +11,6 @@
 
   function matchesSource(question, source) {
     const levels = question.levels || [];
-    if (source === "技师新增") return levels.includes("技师") && !levels.includes("高级工");
     return levels.includes(source);
   }
 
@@ -20,14 +19,13 @@
     const origins = question.origins || [];
     if (material === "pdf") {
       if (source === "高级工") return origins.some((origin) => /三级-电力交易员.*\.pdf$/i.test(origin));
-      if (source === "技师" || source === "技师新增") return origins.some((origin) => /二级-电力交易员.*\.pdf$/i.test(origin));
+      if (source === "技师") return origins.some((origin) => /二级-电力交易员.*\.pdf$/i.test(origin));
       return false;
     }
     return true;
   }
 
   function sourceLabel(source) {
-    if (source === "技师新增") return "技师新增";
     return `${source}题库`;
   }
 

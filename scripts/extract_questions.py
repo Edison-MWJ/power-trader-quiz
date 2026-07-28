@@ -9,6 +9,7 @@ import subprocess
 from datetime import datetime
 from pathlib import Path
 
+from docx import Document
 from openpyxl import load_workbook
 
 
@@ -17,11 +18,14 @@ SOURCE_DIR = Path(
     "交易员考试/交易员考试"
 )
 SOURCES = {
-    "中级工": SOURCE_DIR / "电力交易员（中级工）题库.xlsx",
-    "高级工": SOURCE_DIR / "电力交易员（高级工）题库.xlsx",
-    "技师": SOURCE_DIR / "电力交易员（技师）题库.xlsx",
+    "中级工": SOURCE_DIR / "中级+高级+技师" / "电力交易员（中级工）题库.xlsx",
+    "高级工": SOURCE_DIR / "中级+高级+技师" / "电力交易员（高级工）题库.xlsx",
+    "技师": SOURCE_DIR / "中级+高级+技师" / "电力交易员（技师）题库.xlsx",
 }
-PDF_SOURCE_DIR = SOURCE_DIR / "电力交易员高级+技师题库"
+PDF_SOURCE_DIR = SOURCE_DIR / "高级+技师试卷"
+DOCX_SOURCES = {
+    "高级工": SOURCE_DIR / "电力交易员高级工题库-答案版).docx",
+}
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "data" / "questions.js"
 DATA_DIR = OUTPUT.parent
@@ -92,10 +96,6 @@ def normalize_answer(value: object, qtype: str) -> list[str]:
 
 
 def question_scope(levels: list[str]) -> str:
-    if levels == ["技师"]:
-        return "技师新增"
-    if "技师" in levels and "高级工" not in levels:
-        return "技师新增"
     if len(levels) == 1:
         return f"{levels[0]}独有"
     return "+".join(levels)
@@ -135,6 +135,80 @@ def extract_xlsx_bank(level: str, source: Path) -> list[dict[str, object]]:
                 }
             )
 
+    return questions
+
+
+def extract_docx_bank(level: str, source: Path) -> list[dict[str, object]]:
+    document = Document(source)
+    questions: list[dict[str, object]] = []
+    qtype = ""
+    current: dict[str, object] | None = None
+
+    def flush_current() -> None:
+        nonlocal current
+        if current and current.get("stem") and current.get("answer"):
+            questions.append(current)
+        current = None
+
+    for paragraph in document.paragraphs:
+        text = clean(paragraph.text)
+        if not text:
+            continue
+
+        if text == "一、单选题":
+            flush_current()
+            qtype = "单选"
+            continue
+        if text == "二、多选题":
+            flush_current()
+            qtype = "多选"
+            continue
+        if text == "判断题":
+            flush_current()
+            qtype = "判断"
+            continue
+
+        question_match = re.match(r"^第\s*(\d+)\s*题\s*[,，、.．]?\s*(.*)$", text)
+        if question_match:
+            flush_current()
+            current = {
+                "level": level,
+                "origin": source.name,
+                "id": f"{level}-{source.stem}-{question_match.group(1)}",
+                "type": qtype,
+                "stem": clean(question_match.group(2)),
+                "options": [],
+                "answer": [],
+            }
+            continue
+
+        if current is None:
+            continue
+
+        answer_match = re.match(r"^参考答案\s*[:：]\s*(.*)$", text)
+        if answer_match:
+            current["answer"] = normalize_answer(answer_match.group(1), str(current["type"]))
+            flush_current()
+            continue
+
+        if text.startswith("试题解析"):
+            continue
+
+        option_match = re.match(r"^([A-J])\s*[、.．]\s*(.*)$", text)
+        if option_match and current["type"] in {"单选", "多选"}:
+            current["options"].append(  # type: ignore[union-attr]
+                {"label": option_match.group(1), "text": clean(option_match.group(2))}
+            )
+            continue
+
+        if current["type"] in {"单选", "多选"} and current["options"]:
+            current["options"][-1]["text"] = clean(  # type: ignore[index,union-attr]
+                str(current["options"][-1]["text"]) + " " + text  # type: ignore[index,union-attr]
+            )
+        else:
+            current["stem"] = clean(str(current["stem"]) + " " + text)
+
+    flush_current()
     return questions
 
 
@@ -275,6 +349,13 @@ def extract() -> dict[str, object]:
         raw_questions.extend(bank_questions)
         source_counts[level] = len(bank_questions)
 
+    docx_files: list[Path] = []
+    for level, source in DOCX_SOURCES.items():
+        bank_questions = extract_docx_bank(level, source)
+        raw_questions.extend(bank_questions)
+        source_counts[level] = source_counts.get(level, 0) + len(bank_questions)
+        docx_files.append(source)
+
     pdf_counts: dict[str, int] = {}
     pdf_files = sorted(PDF_SOURCE_DIR.glob("*.pdf"))
     for source in pdf_files:
@@ -326,6 +407,7 @@ def extract() -> dict[str, object]:
         "meta": {
             "title": "电力交易员中级工+高级工+技师题库",
             "sourceFiles": [source.name for source in SOURCES.values()]
+            + [source.name for source in docx_files]
             + [f"{PDF_SOURCE_DIR.name}（PDF {len(pdf_files)} 份）"],
             "generatedAt": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "rawTotal": len(raw_questions),
@@ -413,7 +495,7 @@ def update_service_worker(data: dict[str, object]) -> None:
     urls.extend(f"./data/questions-{part_no:02d}.js" for part_no in range(1, chunk_count(data) + 1))
     block = "const APP_SHELL = [\n" + ",\n".join(f'  "{url}"' for url in urls) + "\n];"
     script = SERVICE_WORKER.read_text(encoding="utf-8")
-    script = re.sub(r'const CACHE_NAME = ".*?";', 'const CACHE_NAME = "power-trader-quiz-v11";', script)
+    script = re.sub(r'const CACHE_NAME = ".*?";', 'const CACHE_NAME = "power-trader-quiz-v12";', script)
     script = APP_SHELL_RE.sub(block, script)
     SERVICE_WORKER.write_text(script, encoding="utf-8")
 
