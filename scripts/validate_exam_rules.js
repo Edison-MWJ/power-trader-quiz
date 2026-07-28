@@ -46,10 +46,29 @@ function validatePaper(source) {
   });
 }
 
+function validatePdfPaper(source) {
+  const paper = buildExamPaper(bank.questions, source, "pdf");
+  const counts = countsByType(paper);
+  EXAM_RULE.sections.forEach((section) => {
+    assert(
+      counts[section.type] === section.count,
+      `${source} PDF ${section.type} expected ${section.count}, got ${counts[section.type] || 0}`
+    );
+  });
+  assert(paper.length === 85, `${source} PDF expected 85 questions, got ${paper.length}`);
+  assert(
+    paper.every((question) => (question.origins || []).some((origin) => /\.pdf$/i.test(origin))),
+    `${source} PDF paper contains non-PDF question`
+  );
+}
+
 validatePaper("中级工");
 validatePaper("高级工");
 validatePaper("技师");
 validatePaper("技师新增");
+validatePdfPaper("高级工");
+validatePdfPaper("技师");
+validatePdfPaper("技师新增");
 assert(EXAM_RULE.durationSeconds === 7200, `expected 120 minute exam, got ${EXAM_RULE.durationSeconds}`);
 
 const multi = { type: "多选", answer: ["A", "C", "D"] };

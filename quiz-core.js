@@ -15,9 +15,21 @@
     return levels.includes(source);
   }
 
+  function matchesMaterial(question, material) {
+    if (!material || material === "all") return true;
+    const origins = question.origins || [];
+    if (material === "pdf") return origins.some((origin) => /\.pdf$/i.test(origin));
+    return true;
+  }
+
   function sourceLabel(source) {
     if (source === "技师新增") return "技师新增";
     return `${source}题库`;
+  }
+
+  function materialLabel(material) {
+    if (material === "pdf") return "PDF样卷";
+    return "全部题";
   }
 
   function sameAnswer(selected, answer) {
@@ -49,11 +61,15 @@
     return result;
   }
 
-  function buildExamPaper(questions, source) {
+  function buildExamPaper(questions, source, material = "all") {
     const sections = EXAM_RULE.sections.map((section) => {
-      const pool = questions.filter((question) => question.type === section.type && matchesSource(question, source));
+      const pool = questions.filter((question) =>
+        question.type === section.type
+        && matchesSource(question, source)
+        && matchesMaterial(question, material)
+      );
       if (pool.length < section.count) {
-        throw new Error(`${sourceLabel(source)}${section.type}题不足，需要 ${section.count} 题，当前 ${pool.length} 题`);
+        throw new Error(`${sourceLabel(source)}${material === "pdf" ? "PDF样卷" : ""}${section.type}题不足，需要 ${section.count} 题，当前 ${pool.length} 题`);
       }
       return shuffle(pool).slice(0, section.count);
     });
@@ -138,7 +154,9 @@
   const api = {
     EXAM_RULE,
     matchesSource,
+    matchesMaterial,
     sourceLabel,
+    materialLabel,
     sameAnswer,
     scoreQuestion,
     buildExamPaper,

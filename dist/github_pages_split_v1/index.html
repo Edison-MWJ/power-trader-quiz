@@ -183,7 +183,9 @@
     .segments button,
     .filter button,
     .scope-filter button,
+    .material-filter button,
     .exam-source button,
+    .exam-material button,
     .answer-sheet button,
     .small-button {
       min-height: 38px;
@@ -196,14 +198,22 @@
     .segments button.active,
     .filter button.active,
     .scope-filter button.active,
+    .material-filter button.active,
     .exam-source button.active {
+      background: var(--ink);
+      color: white;
+    }
+
+    .exam-material button.active {
       background: var(--ink);
       color: white;
     }
 
     .filter,
     .scope-filter,
-    .exam-source {
+    .material-filter,
+    .exam-source,
+    .exam-material {
       display: grid;
       gap: 6px;
     }
@@ -220,9 +230,16 @@
       grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
     }
 
+    .material-filter,
+    .exam-material {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
     .filter button,
     .scope-filter button,
-    .exam-source button {
+    .material-filter button,
+    .exam-source button,
+    .exam-material button {
       border: 1px solid var(--line);
       background: white;
       font-size: 13px;
@@ -335,7 +352,9 @@
     .segments button:active,
     .filter button:active,
     .scope-filter button:active,
+    .material-filter button:active,
     .exam-source button:active,
+    .exam-material button:active,
     .answer-sheet button:active,
     .small-button:active,
     .primary:active,
@@ -677,6 +696,10 @@
           <button data-source="技师">技师</button>
           <button data-source="技师新增">技师新增</button>
         </div>
+        <div class="material-filter" aria-label="题源筛选">
+          <button data-material="all" class="active">全部题</button>
+          <button data-material="pdf">仅PDF样卷</button>
+        </div>
         <div class="search-row">
           <input id="searchInput" type="search" placeholder="搜索题干关键词">
           <button class="small-button" id="resetButton">重置</button>
@@ -693,6 +716,10 @@
           <button data-exam-source="高级工" class="active">高级工</button>
           <button data-exam-source="技师">技师</button>
           <button data-exam-source="技师新增">技师新增</button>
+        </div>
+        <div class="exam-material" aria-label="考试题源筛选">
+          <button data-exam-material="all" class="active">全部题</button>
+          <button data-exam-material="pdf">仅PDF样卷</button>
         </div>
         <button class="primary" id="startExamButton">开始模拟考试</button>
         <div class="exam-analysis" id="examAnalysis"></div>
@@ -733,7 +760,6 @@
   <script src="data/questions-19.js"></script>
   <script src="data/questions-20.js"></script>
   <script src="data/questions-21.js"></script>
-  <script src="data/questions-22.js"></script>
   <script>window.QUESTION_BANK = { meta: window.QUESTION_META, questions: window.QUESTION_PARTS.flat() };</script>
   <script src="quiz-core.js"></script>
   <script>
@@ -744,7 +770,9 @@
     const {
       EXAM_RULE,
       matchesSource,
+      matchesMaterial,
       sourceLabel,
+      materialLabel,
       sameAnswer,
       scoreQuestion,
       buildExamPaper,
@@ -757,6 +785,7 @@
       mode: "random",
       filter: "all",
       source: "高级工",
+      material: "all",
       search: "",
       current: null,
       selected: new Set(),
@@ -766,6 +795,7 @@
       stats: loadStats(),
       exam: {
         source: "高级工",
+        material: "all",
         status: "setup",
         paper: [],
         index: 0,
@@ -838,12 +868,13 @@
       return questions.filter((question) => {
         const typeOk = state.filter === "all" || question.type === state.filter;
         const sourceOk = matchesSource(question, state.source);
+        const materialOk = matchesMaterial(question, state.material);
         const searchOk = !term || question.stem.includes(term);
         const wrongOk = state.mode !== "wrong" || state.stats.wrongIds.includes(question.id);
         const favoriteOk = state.mode !== "favorite" || state.stats.favoriteIds.includes(question.id);
         const weakType = getWeakType();
         const weakOk = state.mode !== "weak" || (weakType && question.type === weakType);
-        return typeOk && sourceOk && searchOk && wrongOk && favoriteOk && weakOk;
+        return typeOk && sourceOk && materialOk && searchOk && wrongOk && favoriteOk && weakOk;
       });
     }
 
@@ -910,6 +941,15 @@
       pickQuestion();
     }
 
+    function setMaterial(material) {
+      state.material = material;
+      state.orderIndex = 0;
+      document.querySelectorAll("[data-material]").forEach((button) => {
+        button.classList.toggle("active", button.dataset.material === material);
+      });
+      pickQuestion();
+    }
+
     function setExamSource(source) {
       if (state.exam.status === "active" && !confirm("当前模拟考试还未交卷，确认重新选择题库并结束本次考试？")) return;
       stopExamTimer();
@@ -924,6 +964,24 @@
       state.exam.result = null;
       document.querySelectorAll("[data-exam-source]").forEach((button) => {
         button.classList.toggle("active", button.dataset.examSource === source);
+      });
+      render();
+    }
+
+    function setExamMaterial(material) {
+      if (state.exam.status === "active" && !confirm("当前模拟考试还未交卷，确认重新选择题源并结束本次考试？")) return;
+      stopExamTimer();
+      state.exam.material = material;
+      state.exam.status = "setup";
+      state.exam.paper = [];
+      state.exam.index = 0;
+      state.exam.answers = {};
+      state.exam.marked = [];
+      state.exam.startedAt = null;
+      state.exam.elapsedSeconds = 0;
+      state.exam.result = null;
+      document.querySelectorAll("[data-exam-material]").forEach((button) => {
+        button.classList.toggle("active", button.dataset.examMaterial === material);
       });
       render();
     }
@@ -981,7 +1039,7 @@
 
     function startExam() {
       try {
-        state.exam.paper = buildExamPaper(questions, state.exam.source);
+        state.exam.paper = buildExamPaper(questions, state.exam.source, state.exam.material);
       } catch (error) {
         alert(error.message);
         return;
@@ -1049,6 +1107,7 @@
         ...summary,
         details,
         source: state.exam.source,
+        material: state.exam.material,
         duration: state.exam.elapsedSeconds,
         submittedAt: new Date().toISOString()
       };
@@ -1056,6 +1115,7 @@
       state.exam.status = "result";
       state.exam.history.unshift({
         source: state.exam.source,
+        material: state.exam.material,
         score: summary.total,
         byType: summary.byType,
         duration: state.exam.elapsedSeconds,
@@ -1134,13 +1194,14 @@
       els.accuracy.textContent = answered ? `${Math.round(state.stats.correct / answered * 100)}%` : "0%";
       els.wrongCount.textContent = state.mode === "favorite" ? state.stats.favoriteIds.length : state.stats.wrongIds.length;
       const weakType = state.mode === "weak" ? getWeakType() : "";
+      const label = `${sourceLabel(state.source)} · ${materialLabel(state.material)}`;
       els.metaText.textContent = weakType
-        ? `${sourceLabel(state.source)} · 薄弱项：${weakType}`
-        : `${sourceLabel(state.source)} · ${countBySource(state.source)} 道去重题`;
+        ? `${label} · 薄弱项：${weakType}`
+        : `${label} · ${countBySource(state.source, state.material)} 道去重题`;
     }
 
     function renderExamStats() {
-      els.metaText.textContent = `${sourceLabel(state.exam.source)} · 模拟考试`;
+      els.metaText.textContent = `${sourceLabel(state.exam.source)} · ${materialLabel(state.exam.material)} · 模拟考试`;
       if (state.exam.status === "active") {
         els.doneLabel.textContent = "已答题";
         els.accuracyLabel.textContent = "剩余";
@@ -1170,8 +1231,8 @@
       els.wrongCount.textContent = state.exam.history.length;
     }
 
-    function countBySource(source) {
-      return questions.filter((question) => matchesSource(question, source)).length;
+    function countBySource(source, material = "all") {
+      return questions.filter((question) => matchesSource(question, source) && matchesMaterial(question, material)).length;
     }
 
     function renderQuestion() {
@@ -1226,6 +1287,7 @@
           <div class="tag-row">
             <span class="tag ${tagClass}">${question.type}</span>
             <span class="tag scope">${sourceLabel(state.source)}</span>
+            <span class="tag">${materialLabel(state.material)}</span>
           </div>
           <button class="small-button compact" id="favoriteButton">${isFavorite ? "取消收藏" : "收藏"}</button>
         </div>
@@ -1259,6 +1321,7 @@
         <div class="question-head">
           <div class="tag-row">
             <span class="tag scope">${sourceLabel(state.exam.source)}</span>
+            <span class="tag">${materialLabel(state.exam.material)}</span>
             <span class="tag">模拟考试</span>
           </div>
           <span class="progress-text">满分 100</span>
@@ -1299,6 +1362,7 @@
           <div class="tag-row">
             <span class="tag ${tagClass}">${question.type}</span>
             <span class="tag scope">${sourceLabel(state.exam.source)}</span>
+            <span class="tag">${materialLabel(state.exam.material)}</span>
             <span class="tag">第 ${state.exam.index + 1} / ${state.exam.paper.length} 题</span>
           </div>
           <button class="small-button compact" id="markExamButton">${isMarked ? "取消标记" : "标记"}</button>
@@ -1347,6 +1411,7 @@
         <div class="question-head">
           <div class="tag-row">
             <span class="tag scope">${sourceLabel(result.source)}</span>
+            <span class="tag">${materialLabel(result.material)}</span>
             <span class="tag">模拟考试结果</span>
           </div>
           <span class="progress-text">${formatDuration(result.duration)}</span>
@@ -1375,7 +1440,7 @@
       const items = state.exam.history.slice(0, 5).map((item) => {
         const date = new Date(item.at);
         const label = Number.isNaN(date.getTime()) ? "" : `${date.getMonth() + 1}/${date.getDate()} ${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
-        return `${label} · ${item.source} · ${item.score}分 · ${formatDuration(item.duration)}`;
+        return `${label} · ${item.source} · ${materialLabel(item.material)} · ${item.score}分 · ${formatDuration(item.duration)}`;
       }).join("<br>");
       els.examHistory.innerHTML = `<strong>最近成绩</strong>${items}`;
     }
@@ -1423,8 +1488,16 @@
       button.addEventListener("click", () => setSource(button.dataset.source));
     });
 
+    document.querySelectorAll("[data-material]").forEach((button) => {
+      button.addEventListener("click", () => setMaterial(button.dataset.material));
+    });
+
     document.querySelectorAll("[data-exam-source]").forEach((button) => {
       button.addEventListener("click", () => setExamSource(button.dataset.examSource));
+    });
+
+    document.querySelectorAll("[data-exam-material]").forEach((button) => {
+      button.addEventListener("click", () => setExamMaterial(button.dataset.examMaterial));
     });
 
     els.startExamButton.addEventListener("click", startExam);

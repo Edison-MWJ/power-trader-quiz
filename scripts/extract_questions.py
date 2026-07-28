@@ -80,7 +80,14 @@ def canonical(value: object) -> str:
 def normalize_answer(value: object, qtype: str) -> list[str]:
     text = compact(value)
     if qtype == "判断":
-        return [text.replace("正确", "对").replace("错误", "错").replace("√", "对").replace("×", "错")]
+        return [
+            text.replace("正确", "对")
+            .replace("错误", "错")
+            .replace("√", "对")
+            .replace("×", "错")
+            .replace("A", "对")
+            .replace("B", "错")
+        ]
     return [letter for letter in LETTERS if letter in text.upper()]
 
 
@@ -226,7 +233,7 @@ def extract_pdf_bank(source: Path) -> list[dict[str, object]]:
             if qtype in {"单选", "多选"}:
                 stem, options = parse_pdf_options(question_text)
             else:
-                stem = question_text.strip()
+                stem, _pdf_options = parse_pdf_options(question_text)
                 options = [{"label": "对", "text": "对"}, {"label": "错", "text": "错"}]
 
             stem = re.sub(r"\n+", " ", stem).strip()
@@ -406,7 +413,7 @@ def update_service_worker(data: dict[str, object]) -> None:
     urls.extend(f"./data/questions-{part_no:02d}.js" for part_no in range(1, chunk_count(data) + 1))
     block = "const APP_SHELL = [\n" + ",\n".join(f'  "{url}"' for url in urls) + "\n];"
     script = SERVICE_WORKER.read_text(encoding="utf-8")
-    script = re.sub(r'const CACHE_NAME = ".*?";', 'const CACHE_NAME = "power-trader-quiz-v8";', script)
+    script = re.sub(r'const CACHE_NAME = ".*?";', 'const CACHE_NAME = "power-trader-quiz-v9";', script)
     script = APP_SHELL_RE.sub(block, script)
     SERVICE_WORKER.write_text(script, encoding="utf-8")
 
