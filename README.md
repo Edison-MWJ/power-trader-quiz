@@ -12,7 +12,7 @@ python3 -m http.server 8765
 
 ## 单文件版
 
-如果只想自己使用，不想保持电脑服务在线，可以使用 `dist/电力交易员中级工高级工技师刷题_单文件版_v7.html`。这个文件已经内嵌中级工、高级工和技师题库数据，复制到手机后用浏览器打开即可刷题。
+如果只想自己使用，不想保持电脑服务在线，可以使用 `dist/电力交易员中级工高级工技师刷题_单文件版_v8.html`。这个文件已经内嵌中级工、高级工和技师题库数据，复制到手机后用浏览器打开即可刷题。
 
 注意：iPhone 的“文件”App 经常只预览 HTML，不完整执行里面的 JavaScript，所以本地 HTML 在 iPhone 上不稳定。想在 iPhone 微信里直接打开，建议发布成 HTTPS 静态网页链接。
 
@@ -36,6 +36,8 @@ python3 scripts/build_standalone.py
 - 题库：`data/questions.js`
 - 离线缓存：`service-worker.js`
 - PWA 配置：`manifest.webmanifest`
+
+题库来源包括中级工、高级工、技师 Excel，以及 `电力交易员高级+技师题库/` 目录中的二级、三级 PDF 样卷；其中二级归入技师，三级归入高级工。
 
 当前线上地址：`https://edison-mwj.github.io/power-trader-quiz/`
 

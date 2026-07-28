@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import re
+import subprocess
 from datetime import datetime
 from pathlib import Path
 
@@ -20,6 +21,7 @@ SOURCES = {
     "高级工": SOURCE_DIR / "电力交易员（高级工）题库.xlsx",
     "技师": SOURCE_DIR / "电力交易员（技师）题库.xlsx",
 }
+PDF_SOURCE_DIR = SOURCE_DIR / "电力交易员高级+技师题库"
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "data" / "questions.js"
 DATA_DIR = OUTPUT.parent
@@ -46,10 +48,39 @@ def compact(value: object) -> str:
     return re.sub(r"\s+", "", clean(value))
 
 
+def canonical(value: object) -> str:
+    text = compact(value).upper()
+    table = str.maketrans(
+        {
+            "，": ",",
+            "。": ".",
+            "；": ";",
+            "：": ":",
+            "？": "?",
+            "！": "!",
+            "（": "(",
+            "）": ")",
+            "【": "[",
+            "】": "]",
+            "“": '"',
+            "”": '"',
+            "‘": "'",
+            "’": "'",
+            "．": ".",
+            "、": ",",
+            "－": "-",
+            "—": "-",
+            "–": "-",
+            "％": "%",
+        }
+    )
+    return re.sub(r"[。\.]+$", "", text.translate(table))
+
+
 def normalize_answer(value: object, qtype: str) -> list[str]:
     text = compact(value)
     if qtype == "判断":
-        return [text.replace("正确", "对").replace("错误", "错")]
+        return [text.replace("正确", "对").replace("错误", "错").replace("√", "对").replace("×", "错")]
     return [letter for letter in LETTERS if letter in text.upper()]
 
 
@@ -63,7 +94,7 @@ def question_scope(levels: list[str]) -> str:
     return "+".join(levels)
 
 
-def extract_bank(level: str, source: Path) -> list[dict[str, object]]:
+def extract_xlsx_bank(level: str, source: Path) -> list[dict[str, object]]:
     workbook = load_workbook(source, read_only=True, data_only=True)
     questions = []
 
@@ -88,6 +119,7 @@ def extract_bank(level: str, source: Path) -> list[dict[str, object]]:
             questions.append(
                 {
                     "level": level,
+                    "origin": source.name,
                     "id": f"{level}-{sheet.title}-{row_number}",
                     "type": qtype,
                     "stem": stem,
@@ -99,10 +131,129 @@ def extract_bank(level: str, source: Path) -> list[dict[str, object]]:
     return questions
 
 
+NOISE_LINES = {
+    "得分",
+    "评分人",
+    "姓名",
+    "姓 名",
+    "准考证号",
+    "准 考 证 号",
+    "地区",
+    "地 区",
+    "单位名称",
+    "单 位 名 称",
+}
+
+
+def clean_pdf_line(line: str) -> str:
+    text = line.replace("\uf0b7", "").replace("\uf0fc", "").strip()
+    text = re.sub(r"^(地\s*区|准\s*考\s*证\s*号|姓\s*名)\s+", "", text).strip()
+    return text
+
+
+def denoise_pdf_block(block: str) -> str:
+    lines = []
+    for line in block.splitlines():
+        text = clean_pdf_line(line)
+        if not text:
+            continue
+        if compact(text) in {compact(item) for item in NOISE_LINES}:
+            continue
+        if "考生姓名" in text and "身份证号" in text and "准考证号" in text:
+            continue
+        lines.append(text)
+    return "\n".join(lines)
+
+
+def parse_pdf_options(text: str) -> tuple[str, list[dict[str, str]]]:
+    matches = list(re.finditer(r"(?m)^\s*([A-J])、\s*(.*)$", text))
+    if not matches:
+        matches = list(re.finditer(r"(?m)^\s*([A-J])\.\s*(.*)$", text))
+    if not matches:
+        return text.strip(), []
+
+    stem = text[: matches[0].start()].strip()
+    options = []
+    for index, match in enumerate(matches):
+        end = matches[index + 1].start() if index + 1 < len(matches) else len(text)
+        body = (match.group(2) + "\n" + text[match.end() : end]).strip()
+        body = re.sub(r"\n+", " ", body).strip()
+        if body:
+            options.append({"label": match.group(1), "text": body})
+    return stem, options
+
+
+def pdf_level(source: Path) -> str:
+    if "二级" in source.name:
+        return "技师"
+    if "三级" in source.name:
+        return "高级工"
+    raise ValueError(f"Cannot infer PDF level from {source.name}")
+
+
+def extract_pdf_bank(source: Path) -> list[dict[str, object]]:
+    text = subprocess.check_output(["pdftotext", "-layout", str(source), "-"], text=True, errors="ignore")
+    section_matches = list(re.finditer(r"[一二三]、\s*(单选题|多选题|判断题)", text))
+    questions = []
+    level = pdf_level(source)
+    type_map = {"单选题": "单选", "多选题": "多选", "判断题": "判断"}
+
+    for section_index, section_match in enumerate(section_matches):
+        qtype = type_map[section_match.group(1)]
+        start = section_match.end()
+        end = section_matches[section_index + 1].start() if section_index + 1 < len(section_matches) else len(text)
+        section_text = text[start:end]
+        answer_matches = list(
+            re.finditer(r"【\s*参考答案\s*】\s*([A-J]+|正确|错误|对|错|√|×)", section_text)
+        )
+        previous_end = 0
+
+        for answer_match in answer_matches:
+            block = denoise_pdf_block(section_text[previous_end : answer_match.start()])
+            previous_end = answer_match.end()
+            number_matches = list(re.finditer(r"(?m)^\s*(\d+)、\s*", block))
+            if not number_matches:
+                number_matches = list(re.finditer(r"(?:^|\n).*?(\d+)、\s*", block))
+
+            row_number = None
+            if number_matches:
+                question_match = number_matches[-1]
+                row_number = int(question_match.group(1))
+                question_text = block[question_match.end() :].strip()
+            else:
+                question_text = block.strip()
+
+            if qtype in {"单选", "多选"}:
+                stem, options = parse_pdf_options(question_text)
+            else:
+                stem = question_text.strip()
+                options = [{"label": "对", "text": "对"}, {"label": "错", "text": "错"}]
+
+            stem = re.sub(r"\n+", " ", stem).strip()
+            stem = re.sub(r"\s+", " ", stem)
+            answer = normalize_answer(answer_match.group(1), qtype)
+            if not stem or not answer:
+                continue
+
+            questions.append(
+                {
+                    "level": level,
+                    "origin": source.name,
+                    "id": f"{level}-{source.stem}-{row_number or len(questions) + 1}",
+                    "type": qtype,
+                    "stem": stem,
+                    "options": options,
+                    "answer": answer,
+                }
+            )
+
+    return questions
+
+
 def exact_key(question: dict[str, object]) -> tuple[object, ...]:
-    options = tuple((option["label"], compact(option["text"])) for option in question["options"])  # type: ignore[index]
+    options = tuple((option["label"], canonical(option["text"])) for option in question["options"])  # type: ignore[index]
     return (
-        compact(question["stem"]),
+        canonical(question["stem"]),
         question["type"],
         tuple(question["answer"]),  # type: ignore[arg-type]
         options,
@@ -113,9 +264,18 @@ def extract() -> dict[str, object]:
     raw_questions = []
     source_counts: dict[str, int] = {}
     for level, source in SOURCES.items():
-        bank_questions = extract_bank(level, source)
+        bank_questions = extract_xlsx_bank(level, source)
         raw_questions.extend(bank_questions)
         source_counts[level] = len(bank_questions)
+
+    pdf_counts: dict[str, int] = {}
+    pdf_files = sorted(PDF_SOURCE_DIR.glob("*.pdf"))
+    for source in pdf_files:
+        bank_questions = extract_pdf_bank(source)
+        raw_questions.extend(bank_questions)
+        level = pdf_level(source)
+        source_counts[level] = source_counts.get(level, 0) + len(bank_questions)
+        pdf_counts[level] = pdf_counts.get(level, 0) + len(bank_questions)
 
     merged: dict[tuple[object, ...], dict[str, object]] = {}
     for question in raw_questions:
@@ -127,12 +287,16 @@ def extract() -> dict[str, object]:
                 "options": question["options"],
                 "answer": question["answer"],
                 "levels": [],
+                "origins": [],
             }
 
         item = merged[key]
         level = str(question["level"])
         if level not in item["levels"]:  # type: ignore[operator]
             item["levels"].append(level)  # type: ignore[index,union-attr]
+        origin = str(question.get("origin", ""))
+        if origin and origin not in item["origins"]:  # type: ignore[operator]
+            item["origins"].append(origin)  # type: ignore[index,union-attr]
 
     level_order = {"中级工": 0, "高级工": 1, "技师": 2}
     questions: list[dict[str, object]] = []
@@ -154,12 +318,14 @@ def extract() -> dict[str, object]:
     return {
         "meta": {
             "title": "电力交易员中级工+高级工+技师题库",
-            "sourceFiles": [source.name for source in SOURCES.values()],
+            "sourceFiles": [source.name for source in SOURCES.values()]
+            + [f"{PDF_SOURCE_DIR.name}（PDF {len(pdf_files)} 份）"],
             "generatedAt": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "rawTotal": len(raw_questions),
             "total": len(questions),
             "deduped": len(raw_questions) - len(questions),
             "sourceCounts": source_counts,
+            "pdfSourceCounts": pdf_counts,
             "byType": by_type,
             "byScope": by_scope,
         },
@@ -240,7 +406,7 @@ def update_service_worker(data: dict[str, object]) -> None:
     urls.extend(f"./data/questions-{part_no:02d}.js" for part_no in range(1, chunk_count(data) + 1))
     block = "const APP_SHELL = [\n" + ",\n".join(f'  "{url}"' for url in urls) + "\n];"
     script = SERVICE_WORKER.read_text(encoding="utf-8")
-    script = re.sub(r'const CACHE_NAME = ".*?";', 'const CACHE_NAME = "power-trader-quiz-v7";', script)
+    script = re.sub(r'const CACHE_NAME = ".*?";', 'const CACHE_NAME = "power-trader-quiz-v8";', script)
     script = APP_SHELL_RE.sub(block, script)
     SERVICE_WORKER.write_text(script, encoding="utf-8")
 
