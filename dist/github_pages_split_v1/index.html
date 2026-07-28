@@ -709,7 +709,7 @@
       <section class="panel controls hidden" id="examControls" aria-label="模拟考试设置">
         <div class="exam-rule">
           <strong>模拟考试规则</strong>
-          单选 50 题，每题 1 分；多选 15 题，每题 2 分；判断 20 题，每题 1 分。共 85 题，满分 100 分，限时 120 分钟。
+          单选 100 题，每题 0.5 分；多选 30 题，每题 1 分；判断 40 题，每题 0.5 分。共 170 题，满分 100 分，限时 120 分钟。
         </div>
         <div class="exam-source" aria-label="考试题库来源">
           <button data-exam-source="中级工">中级工</button>
@@ -1226,7 +1226,7 @@
       els.doneLabel.textContent = "题量";
       els.accuracyLabel.textContent = "满分";
       els.wrongLabel.textContent = "模考记录";
-      els.doneCount.textContent = 85;
+      els.doneCount.textContent = EXAM_RULE.sections.reduce((sum, section) => sum + section.count, 0);
       els.accuracy.textContent = 100;
       els.wrongCount.textContent = state.exam.history.length;
     }
@@ -1329,7 +1329,7 @@
         <div class="stem">准备开始一套完整模拟考试</div>
         <div class="exam-summary">
           <strong>${counts}</strong>
-          考试时长 120 分钟。多选题全部选对得 2 分；只选了部分正确选项且没有选错项得 1 分；选了任何错误项不得分。
+          考试时长 120 分钟。多选题全部选对得 1 分，漏选或错选不得分。
         </div>`;
     }
 

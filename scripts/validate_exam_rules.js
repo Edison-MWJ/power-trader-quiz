@@ -38,7 +38,7 @@ function validatePaper(source) {
       `${source} ${section.type} expected ${section.count}, got ${counts[section.type] || 0}`
     );
   });
-  assert(paper.length === 85, `${source} expected 85 questions, got ${paper.length}`);
+  assert(paper.length === 170, `${source} expected 170 questions, got ${paper.length}`);
   const expectedOrder = EXAM_RULE.sections.flatMap((section) => Array(section.count).fill(section.type));
   paper.forEach((question, index) => {
     assert(
@@ -58,7 +58,7 @@ function validatePdfPaper(source) {
       `${source} PDF ${section.type} expected ${section.count}, got ${counts[section.type] || 0}`
     );
   });
-  assert(paper.length === 85, `${source} PDF expected 85 questions, got ${paper.length}`);
+  assert(paper.length === 170, `${source} PDF expected 170 questions, got ${paper.length}`);
   assert(
     paper.every((question) => matchesMaterial(question, "pdf", source)),
     `${source} PDF paper contains a question outside its PDF level`
@@ -78,10 +78,10 @@ validatePdfPaper("技师新增");
 assert(EXAM_RULE.durationSeconds === 7200, `expected 120 minute exam, got ${EXAM_RULE.durationSeconds}`);
 
 const multi = { type: "多选", answer: ["A", "C", "D"] };
-assert(scoreQuestion(multi, ["A", "C", "D"]) === 2, "multi exact answer scores 2");
-assert(scoreQuestion(multi, ["A", "D"]) === 1, "multi partial correct scores 1");
+assert(scoreQuestion(multi, ["A", "C", "D"]) === 1, "multi exact answer scores 1");
+assert(scoreQuestion(multi, ["A", "D"]) === 0, "multi partial correct scores 0");
 assert(scoreQuestion(multi, ["A", "B"]) === 0, "multi wrong pick scores 0");
-assert(scoreQuestion({ type: "单选", answer: ["A"] }, ["A"]) === 1, "single correct scores 1");
+assert(scoreQuestion({ type: "单选", answer: ["A"] }, ["A"]) === 0.5, "single correct scores 0.5");
 assert(scoreQuestion({ type: "判断", answer: ["正确"] }, ["错误"]) === 0, "judge wrong scores 0");
 
 const summary = summarizeExam(
@@ -96,7 +96,7 @@ const summary = summarizeExam(
     judge: ["正确"]
   }
 );
-assert(summary.total === 3, `summary expected 3, got ${summary.total}`);
+assert(summary.total === 1, `summary expected 1, got ${summary.total}`);
 assert(summary.answered === 3, `summary expected 3 answered, got ${summary.answered}`);
 
 const analysis = analyzeExamHistory([

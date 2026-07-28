@@ -3,9 +3,9 @@
     totalScore: 100,
     durationSeconds: 120 * 60,
     sections: [
-      { type: "单选", count: 50, points: 1 },
-      { type: "多选", count: 15, points: 2 },
-      { type: "判断", count: 20, points: 1 }
+      { type: "单选", count: 100, points: 0.5 },
+      { type: "多选", count: 30, points: 1 },
+      { type: "判断", count: 40, points: 0.5 }
     ]
   };
 
@@ -48,12 +48,7 @@
     const rule = EXAM_RULE.sections.find((section) => section.type === question.type);
     if (!rule) return 0;
     if (sameAnswer(selectedList, answer)) return rule.points;
-    if (question.type !== "多选" || !selectedList.length) return 0;
-
-    const answerSet = new Set(answer);
-    const hasWrongPick = selectedList.some((item) => !answerSet.has(item));
-    if (hasWrongPick) return 0;
-    return 1;
+    return 0;
   }
 
   function shuffle(items) {
