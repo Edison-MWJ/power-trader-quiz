@@ -22,7 +22,11 @@ SOURCES = {
     "高级工": SOURCE_DIR / "中级+高级+技师" / "电力交易员（高级工）题库.xlsx",
     "技师": SOURCE_DIR / "中级+高级+技师" / "电力交易员（技师）题库.xlsx",
 }
-PDF_SOURCE_DIR = SOURCE_DIR / "高级+技师试卷"
+PDF_SOURCE_DIRS = [
+    SOURCE_DIR / "高级+技师试卷",
+    SOURCE_DIR / "电力交易员" / "样卷2",
+    SOURCE_DIR / "电力交易员" / "样卷3",
+]
 DOCX_SOURCES = {
     "高级工": SOURCE_DIR / "电力交易员高级工题库-答案版).docx",
 }
@@ -272,11 +276,19 @@ def pdf_level(source: Path) -> str:
     raise ValueError(f"Cannot infer PDF level from {source.name}")
 
 
+def source_label(source: Path) -> str:
+    try:
+        return str(source.relative_to(SOURCE_DIR))
+    except ValueError:
+        return source.name
+
+
 def extract_pdf_bank(source: Path) -> list[dict[str, object]]:
     text = subprocess.check_output(["pdftotext", "-layout", str(source), "-"], text=True, errors="ignore")
     section_matches = list(re.finditer(r"[一二三]、\s*(单选题|多选题|判断题)", text))
     questions = []
     level = pdf_level(source)
+    origin = source_label(source)
     type_map = {"单选题": "单选", "多选题": "多选", "判断题": "判断"}
 
     for section_index, section_match in enumerate(section_matches):
@@ -319,8 +331,8 @@ def extract_pdf_bank(source: Path) -> list[dict[str, object]]:
             questions.append(
                 {
                     "level": level,
-                    "origin": source.name,
-                    "id": f"{level}-{source.stem}-{row_number or len(questions) + 1}",
+                    "origin": origin,
+                    "id": f"{level}-{source.parent.name}-{source.stem}-{row_number or len(questions) + 1}",
                     "type": qtype,
                     "stem": stem,
                     "options": options,
@@ -357,7 +369,7 @@ def extract() -> dict[str, object]:
         docx_files.append(source)
 
     pdf_counts: dict[str, int] = {}
-    pdf_files = sorted(PDF_SOURCE_DIR.glob("*.pdf"))
+    pdf_files = [source for source_dir in PDF_SOURCE_DIRS for source in sorted(source_dir.glob("*.pdf"))]
     for source in pdf_files:
         bank_questions = extract_pdf_bank(source)
         raw_questions.extend(bank_questions)
@@ -408,7 +420,7 @@ def extract() -> dict[str, object]:
             "title": "电力交易员中级工+高级工+技师题库",
             "sourceFiles": [source.name for source in SOURCES.values()]
             + [source.name for source in docx_files]
-            + [f"{PDF_SOURCE_DIR.name}（PDF {len(pdf_files)} 份）"],
+            + [f"{source_label(source_dir)}（PDF {len(list(source_dir.glob('*.pdf')))} 份）" for source_dir in PDF_SOURCE_DIRS],
             "generatedAt": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "rawTotal": len(raw_questions),
             "total": len(questions),
@@ -495,7 +507,7 @@ def update_service_worker(data: dict[str, object]) -> None:
     urls.extend(f"./data/questions-{part_no:02d}.js" for part_no in range(1, chunk_count(data) + 1))
     block = "const APP_SHELL = [\n" + ",\n".join(f'  "{url}"' for url in urls) + "\n];"
     script = SERVICE_WORKER.read_text(encoding="utf-8")
-    script = re.sub(r'const CACHE_NAME = ".*?";', 'const CACHE_NAME = "power-trader-quiz-v12";', script)
+    script = re.sub(r'const CACHE_NAME = ".*?";', 'const CACHE_NAME = "power-trader-quiz-v13";', script)
     script = APP_SHELL_RE.sub(block, script)
     SERVICE_WORKER.write_text(script, encoding="utf-8")
 

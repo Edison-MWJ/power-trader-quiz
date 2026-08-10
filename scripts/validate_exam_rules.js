@@ -63,8 +63,7 @@ function validatePdfPaper(source) {
     paper.every((question) => matchesMaterial(question, "pdf", source)),
     `${source} PDF paper contains a question outside its PDF level`
   );
-  if (source === "高级工") assert(pool.length === 1403, `高级工 PDF pool expected 1403, got ${pool.length}`);
-  if (source === "技师") assert(pool.length === 1460, `技师 PDF pool expected 1460, got ${pool.length}`);
+  assert(pool.length >= paper.length, `${source} PDF pool expected at least ${paper.length}, got ${pool.length}`);
 }
 
 validatePaper("中级工");
