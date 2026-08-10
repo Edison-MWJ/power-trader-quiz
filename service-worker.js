@@ -1,4 +1,4 @@
-const CACHE_NAME = "power-trader-quiz-v13";
+const CACHE_NAME = "power-trader-quiz-v14";
 const APP_SHELL = [
   "./",
   "./index.html",

@@ -414,6 +414,22 @@
       background: rgba(209, 73, 91, .10);
     }
 
+    .explanation {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(20, 33, 61, .12);
+      color: var(--ink);
+      line-height: 1.65;
+    }
+
+    .explanation span {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
     .exam-rule,
     .exam-history,
     .exam-analysis,
@@ -1184,6 +1200,12 @@
       }).join("；");
     }
 
+    function explanationHtml(question) {
+      const explanations = Array.isArray(question.explanations) ? question.explanations.filter(Boolean) : [];
+      const text = explanations.length ? explanations.join("\n") : "暂无解析。";
+      return `<div class="explanation"><span>解析</span>${escapeHtml(text).replaceAll("\n", "<br>")}</div>`;
+    }
+
     function renderStats() {
       if (state.view === "exam") {
         renderExamStats();
@@ -1283,6 +1305,7 @@
         ? `<div class="feedback ${state.correct ? "good" : "bad"}">
             <strong>${state.correct ? "答对了" : "答错了"}</strong><br>
             正确答案：${escapeHtml(answerText(question))}
+            ${explanationHtml(question)}
           </div>`
         : "";
 
@@ -1407,6 +1430,7 @@
             你的答案：${escapeHtml(selectedAnswerText(item.question, item.selected))}<br>
             正确答案：${escapeHtml(answerText(item.question))}<br>
             得分：${item.score}/${item.max}<br>
+            ${explanationHtml(item.question)}
             已自动加入错题本
           </div>`).join("")
         : `<div class="review-item"><strong>本次没有扣分题</strong>这套卷子全部拿分。</div>`;

@@ -154,6 +154,15 @@ def extract_docx_bank(level: str, source: Path) -> list[dict[str, object]]:
             questions.append(current)
         current = None
 
+    def append_explanation(text: str) -> None:
+        if current is None:
+            return
+        explanation = clean(text)
+        if not explanation:
+            return
+        existing = clean(current.get("explanation", ""))
+        current["explanation"] = clean(f"{existing} {explanation}") if existing else explanation
+
     for paragraph in document.paragraphs:
         text = clean(paragraph.text)
         if not text:
@@ -192,10 +201,14 @@ def extract_docx_bank(level: str, source: Path) -> list[dict[str, object]]:
         answer_match = re.match(r"^参考答案\s*[:：]\s*(.*)$", text)
         if answer_match:
             current["answer"] = normalize_answer(answer_match.group(1), str(current["type"]))
-            flush_current()
             continue
 
         if text.startswith("试题解析"):
+            append_explanation(re.sub(r"^试题解析\s*[:：]?\s*", "", text))
+            continue
+
+        if current.get("answer"):
+            append_explanation(text)
             continue
 
         option_match = re.match(r"^([A-J])\s*[、.．]\s*(.*)$", text)
@@ -388,6 +401,7 @@ def extract() -> dict[str, object]:
                 "answer": question["answer"],
                 "levels": [],
                 "origins": [],
+                "explanations": [],
             }
 
         item = merged[key]
@@ -397,6 +411,9 @@ def extract() -> dict[str, object]:
         origin = str(question.get("origin", ""))
         if origin and origin not in item["origins"]:  # type: ignore[operator]
             item["origins"].append(origin)  # type: ignore[index,union-attr]
+        explanation = clean(question.get("explanation", ""))
+        if explanation and explanation not in item["explanations"]:  # type: ignore[operator]
+            item["explanations"].append(explanation)  # type: ignore[index,union-attr]
 
     level_order = {"中级工": 0, "高级工": 1, "技师": 2}
     questions: list[dict[str, object]] = []
@@ -405,6 +422,8 @@ def extract() -> dict[str, object]:
         item["levels"] = levels
         item["scope"] = question_scope([str(level) for level in levels])
         item["id"] = f"Q{index:04d}"
+        if not item["explanations"]:  # type: ignore[index]
+            item.pop("explanations", None)
         questions.append(item)
 
     by_type: dict[str, int] = {}
@@ -507,7 +526,7 @@ def update_service_worker(data: dict[str, object]) -> None:
     urls.extend(f"./data/questions-{part_no:02d}.js" for part_no in range(1, chunk_count(data) + 1))
     block = "const APP_SHELL = [\n" + ",\n".join(f'  "{url}"' for url in urls) + "\n];"
     script = SERVICE_WORKER.read_text(encoding="utf-8")
-    script = re.sub(r'const CACHE_NAME = ".*?";', 'const CACHE_NAME = "power-trader-quiz-v13";', script)
+    script = re.sub(r'const CACHE_NAME = ".*?";', 'const CACHE_NAME = "power-trader-quiz-v14";', script)
     script = APP_SHELL_RE.sub(block, script)
     SERVICE_WORKER.write_text(script, encoding="utf-8")
 
