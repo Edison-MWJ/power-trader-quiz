@@ -35,6 +35,7 @@ OUTPUT = ROOT / "data" / "questions.js"
 DATA_DIR = OUTPUT.parent
 INDEX = ROOT / "index.html"
 SERVICE_WORKER = ROOT / "service-worker.js"
+EXPLANATION_OVERRIDES = ROOT / "scripts" / "advanced_explanation_overrides.json"
 CHUNK_SIZE = 180
 LETTERS = "ABCDEFGHIJ"
 SCRIPT_BLOCK_RE = re.compile(
@@ -426,6 +427,8 @@ def extract() -> dict[str, object]:
             item.pop("explanations", None)
         questions.append(item)
 
+    apply_explanation_overrides(questions)
+
     by_type: dict[str, int] = {}
     by_scope: dict[str, int] = {}
     for question in questions:
@@ -451,6 +454,41 @@ def extract() -> dict[str, object]:
         },
         "questions": questions,
     }
+
+
+def apply_explanation_overrides(questions: list[dict[str, object]]) -> None:
+    if not EXPLANATION_OVERRIDES.exists():
+        return
+
+    overrides = json.loads(EXPLANATION_OVERRIDES.read_text(encoding="utf-8"))
+    by_id = {str(question["id"]): question for question in questions}
+    for question_id, entries in overrides.items():
+        question = by_id.get(str(question_id))
+        if not question or "高级工" not in question.get("levels", []):
+            continue
+
+        explanations = question.setdefault("explanations", [])
+        for entry in entries:
+            text = clean(entry.get("text", ""))
+            source_title = clean(entry.get("sourceTitle", ""))
+            source_url = clean(entry.get("sourceUrl", ""))
+            confidence = clean(entry.get("confidence", ""))
+            if not text:
+                continue
+
+            parts = [text]
+            source_parts = []
+            if source_title:
+                source_parts.append(source_title)
+            if source_url:
+                source_parts.append(source_url)
+            if source_parts:
+                parts.append(f"来源：{' '.join(source_parts)}")
+            if confidence:
+                parts.append(f"可信度：{confidence}")
+            explanation = "\n".join(parts)
+            if explanation not in explanations:  # type: ignore[operator]
+                explanations.append(explanation)  # type: ignore[union-attr]
 
 
 def main() -> None:
@@ -526,7 +564,7 @@ def update_service_worker(data: dict[str, object]) -> None:
     urls.extend(f"./data/questions-{part_no:02d}.js" for part_no in range(1, chunk_count(data) + 1))
     block = "const APP_SHELL = [\n" + ",\n".join(f'  "{url}"' for url in urls) + "\n];"
     script = SERVICE_WORKER.read_text(encoding="utf-8")
-    script = re.sub(r'const CACHE_NAME = ".*?";', 'const CACHE_NAME = "power-trader-quiz-v14";', script)
+    script = re.sub(r'const CACHE_NAME = ".*?";', 'const CACHE_NAME = "power-trader-quiz-v15";', script)
     script = APP_SHELL_RE.sub(block, script)
     SERVICE_WORKER.write_text(script, encoding="utf-8")
 
