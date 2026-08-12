@@ -69,6 +69,7 @@ function validatePdfPaper(source) {
 validatePaper("中级工");
 validatePaper("高级工");
 validatePaper("技师");
+validatePdfPaper("中级工");
 validatePdfPaper("高级工");
 validatePdfPaper("技师");
 assert(EXAM_RULE.durationSeconds === 7200, `expected 120 minute exam, got ${EXAM_RULE.durationSeconds}`);

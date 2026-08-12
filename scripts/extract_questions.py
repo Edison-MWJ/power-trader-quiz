@@ -26,6 +26,7 @@ PDF_SOURCE_DIRS = [
     SOURCE_DIR / "高级+技师试卷",
     SOURCE_DIR / "电力交易员" / "样卷2",
     SOURCE_DIR / "电力交易员" / "样卷3",
+    SOURCE_DIR / "电力交易员-2026电子题库(1)",
 ]
 DOCX_SOURCES = {
     "高级工": SOURCE_DIR / "电力交易员高级工题库-答案版).docx",
@@ -287,6 +288,8 @@ def pdf_level(source: Path) -> str:
         return "技师"
     if "三级" in source.name:
         return "高级工"
+    if "四级" in source.name:
+        return "中级工"
     raise ValueError(f"Cannot infer PDF level from {source.name}")
 
 
@@ -564,7 +567,7 @@ def update_service_worker(data: dict[str, object]) -> None:
     urls.extend(f"./data/questions-{part_no:02d}.js" for part_no in range(1, chunk_count(data) + 1))
     block = "const APP_SHELL = [\n" + ",\n".join(f'  "{url}"' for url in urls) + "\n];"
     script = SERVICE_WORKER.read_text(encoding="utf-8")
-    script = re.sub(r'const CACHE_NAME = ".*?";', 'const CACHE_NAME = "power-trader-quiz-v15";', script)
+    script = re.sub(r'const CACHE_NAME = ".*?";', 'const CACHE_NAME = "power-trader-quiz-v16";', script)
     script = APP_SHELL_RE.sub(block, script)
     SERVICE_WORKER.write_text(script, encoding="utf-8")
 

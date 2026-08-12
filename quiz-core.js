@@ -18,6 +18,7 @@
     if (!material || material === "all") return true;
     const origins = question.origins || [];
     if (material === "pdf") {
+      if (source === "中级工") return origins.some((origin) => /四级-电力交易员.*\.pdf$/i.test(origin));
       if (source === "高级工") return origins.some((origin) => /三级-电力交易员.*\.pdf$/i.test(origin));
       if (source === "技师") return origins.some((origin) => /二级-电力交易员.*\.pdf$/i.test(origin));
       return false;

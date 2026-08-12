@@ -1,4 +1,4 @@
-const CACHE_NAME = "power-trader-quiz-v15";
+const CACHE_NAME = "power-trader-quiz-v16";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -33,7 +33,8 @@ const APP_SHELL = [
   "./data/questions-24.js",
   "./data/questions-25.js",
   "./data/questions-26.js",
-  "./data/questions-27.js"
+  "./data/questions-27.js",
+  "./data/questions-28.js"
 ];
 
 self.addEventListener("install", (event) => {
