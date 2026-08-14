@@ -712,8 +712,7 @@
           <button data-source="技师">技师</button>
         </div>
         <div class="material-filter" aria-label="题源筛选">
-          <button data-material="all" class="active">全部题</button>
-          <button data-material="pdf">仅PDF样卷</button>
+          <button data-material="pdf" class="active">仅PDF样卷</button>
         </div>
         <div class="search-row">
           <input id="searchInput" type="search" placeholder="搜索题干关键词">
@@ -732,8 +731,7 @@
           <button data-exam-source="技师">技师</button>
         </div>
         <div class="exam-material" aria-label="考试题源筛选">
-          <button data-exam-material="all" class="active">全部题</button>
-          <button data-exam-material="pdf">仅PDF样卷</button>
+          <button data-exam-material="pdf" class="active">仅PDF样卷</button>
         </div>
         <button class="primary" id="startExamButton">开始模拟考试</button>
         <div class="exam-analysis" id="examAnalysis"></div>
@@ -806,7 +804,7 @@
       mode: "random",
       filter: "all",
       source: "高级工",
-      material: "all",
+      material: "pdf",
       search: "",
       current: null,
       selected: new Set(),
@@ -816,7 +814,7 @@
       stats: loadStats(),
       exam: {
         source: "高级工",
-        material: "all",
+        material: "pdf",
         status: "setup",
         paper: [],
         index: 0,
@@ -963,10 +961,10 @@
     }
 
     function setMaterial(material) {
-      state.material = material;
+      state.material = "pdf";
       state.orderIndex = 0;
       document.querySelectorAll("[data-material]").forEach((button) => {
-        button.classList.toggle("active", button.dataset.material === material);
+        button.classList.toggle("active", button.dataset.material === "pdf");
       });
       pickQuestion();
     }
@@ -992,7 +990,7 @@
     function setExamMaterial(material) {
       if (state.exam.status === "active" && !confirm("当前模拟考试还未交卷，确认重新选择题源并结束本次考试？")) return;
       stopExamTimer();
-      state.exam.material = material;
+      state.exam.material = "pdf";
       state.exam.status = "setup";
       state.exam.paper = [];
       state.exam.index = 0;
@@ -1002,7 +1000,7 @@
       state.exam.elapsedSeconds = 0;
       state.exam.result = null;
       document.querySelectorAll("[data-exam-material]").forEach((button) => {
-        button.classList.toggle("active", button.dataset.examMaterial === material);
+        button.classList.toggle("active", button.dataset.examMaterial === "pdf");
       });
       render();
     }
@@ -1060,7 +1058,7 @@
 
     function startExam() {
       try {
-        state.exam.paper = buildExamPaper(questions, state.exam.source, state.exam.material);
+        state.exam.paper = buildExamPaper(questions, state.exam.source, "pdf");
       } catch (error) {
         alert(error.message);
         return;
@@ -1259,7 +1257,7 @@
     }
 
     function countBySource(source, material = "all") {
-      return questions.filter((question) => matchesSource(question, source) && matchesMaterial(question, material, source)).length;
+      return questions.filter((question) => matchesSource(question, source) && matchesMaterial(question, "pdf", source)).length;
     }
 
     function renderQuestion() {

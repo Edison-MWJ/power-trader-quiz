@@ -30,7 +30,7 @@ function countsByType(paper) {
 }
 
 function validatePaper(source) {
-  const paper = buildExamPaper(bank.questions, source);
+  const paper = buildExamPaper(bank.questions, source, "pdf");
   const counts = countsByType(paper);
   EXAM_RULE.sections.forEach((section) => {
     assert(

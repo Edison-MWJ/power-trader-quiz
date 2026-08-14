@@ -59,7 +59,7 @@
     return result;
   }
 
-  function buildExamPaper(questions, source, material = "all") {
+  function buildExamPaper(questions, source, material = "pdf") {
     const sections = EXAM_RULE.sections.map((section) => {
       const pool = questions.filter((question) =>
         question.type === section.type
