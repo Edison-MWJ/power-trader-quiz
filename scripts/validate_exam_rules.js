@@ -29,6 +29,26 @@ function countsByType(paper) {
   }, {});
 }
 
+function validateQuestionIntegrity() {
+  bank.questions.forEach((question) => {
+    assert(question.stem && question.stem.trim(), `${question.id} missing stem`);
+    assert(["单选", "多选", "判断"].includes(question.type), `${question.id} invalid type`);
+    assert(Array.isArray(question.answer) && question.answer.length > 0, `${question.id} missing answer`);
+    assert(Array.isArray(question.options) && question.options.length >= 2, `${question.id} missing options`);
+
+    const labels = question.options.map((option) => option.label);
+    assert(new Set(labels).size === labels.length, `${question.id} duplicate option labels`);
+    question.answer.forEach((answer) => {
+      assert(labels.includes(answer), `${question.id} answer ${answer} is not an option`);
+    });
+
+    if (question.type === "判断") {
+      assert(labels.join(",") === "对,错", `${question.id} judgment options are not 对/错`);
+      assert(question.answer.length === 1 && ["对", "错"].includes(question.answer[0]), `${question.id} invalid judgment answer`);
+    }
+  });
+}
+
 function validatePaper(source) {
   const paper = buildExamPaper(bank.questions, source, "pdf");
   const counts = countsByType(paper);
@@ -72,6 +92,7 @@ validatePaper("技师");
 validatePdfPaper("中级工");
 validatePdfPaper("高级工");
 validatePdfPaper("技师");
+validateQuestionIntegrity();
 assert(EXAM_RULE.durationSeconds === 7200, `expected 120 minute exam, got ${EXAM_RULE.durationSeconds}`);
 
 const multi = { type: "多选", answer: ["A", "C", "D"] };

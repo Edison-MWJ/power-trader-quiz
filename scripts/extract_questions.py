@@ -39,6 +39,7 @@ SERVICE_WORKER = ROOT / "service-worker.js"
 EXPLANATION_OVERRIDES = ROOT / "scripts" / "advanced_explanation_overrides.json"
 CHUNK_SIZE = 180
 LETTERS = "ABCDEFGHIJ"
+JUDGMENT_OPTIONS = [{"label": "对", "text": "对"}, {"label": "错", "text": "错"}]
 SCRIPT_BLOCK_RE = re.compile(
     r'\n  <script src="data/meta\.js"></script>\n'
     r"  <script>window\.QUESTION_PARTS = \[\];</script>\n"
@@ -396,6 +397,8 @@ def extract() -> dict[str, object]:
 
     merged: dict[tuple[object, ...], dict[str, object]] = {}
     for question in raw_questions:
+        if question["type"] == "判断":
+            question["options"] = [option.copy() for option in JUDGMENT_OPTIONS]
         key = exact_key(question)
         if key not in merged:
             merged[key] = {
@@ -567,7 +570,7 @@ def update_service_worker(data: dict[str, object]) -> None:
     urls.extend(f"./data/questions-{part_no:02d}.js" for part_no in range(1, chunk_count(data) + 1))
     block = "const APP_SHELL = [\n" + ",\n".join(f'  "{url}"' for url in urls) + "\n];"
     script = SERVICE_WORKER.read_text(encoding="utf-8")
-    script = re.sub(r'const CACHE_NAME = ".*?";', 'const CACHE_NAME = "power-trader-quiz-v17";', script)
+    script = re.sub(r'const CACHE_NAME = ".*?";', 'const CACHE_NAME = "power-trader-quiz-v18";', script)
     script = APP_SHELL_RE.sub(block, script)
     SERVICE_WORKER.write_text(script, encoding="utf-8")
 
