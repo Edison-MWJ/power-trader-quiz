@@ -496,7 +496,6 @@ def apply_explanation_overrides(questions: list[dict[str, object]]) -> None:
             if explanation not in explanations:  # type: ignore[operator]
                 explanations.append(explanation)  # type: ignore[union-attr]
 
-
 def main() -> None:
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     data = extract()
@@ -570,7 +569,7 @@ def update_service_worker(data: dict[str, object]) -> None:
     urls.extend(f"./data/questions-{part_no:02d}.js" for part_no in range(1, chunk_count(data) + 1))
     block = "const APP_SHELL = [\n" + ",\n".join(f'  "{url}"' for url in urls) + "\n];"
     script = SERVICE_WORKER.read_text(encoding="utf-8")
-    script = re.sub(r'const CACHE_NAME = ".*?";', 'const CACHE_NAME = "power-trader-quiz-v18";', script)
+    script = re.sub(r'const CACHE_NAME = ".*?";', 'const CACHE_NAME = "power-trader-quiz-v19";', script)
     script = APP_SHELL_RE.sub(block, script)
     SERVICE_WORKER.write_text(script, encoding="utf-8")
 
