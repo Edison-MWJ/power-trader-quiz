@@ -13,7 +13,7 @@ INDEX = ROOT / "index.html"
 QUESTIONS = ROOT / "data" / "questions.js"
 ICON = ROOT / "icon.svg"
 CORE = ROOT / "quiz-core.js"
-OUTPUT = ROOT / "dist" / "电力交易员中级工高级工技师刷题_单文件版_v22.html"
+OUTPUT = ROOT / "dist" / "电力交易员中级工高级工技师刷题_单文件版_v23.html"
 
 
 SCRIPT_BLOCK_RE = re.compile(
