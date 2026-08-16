@@ -473,7 +473,11 @@ def apply_explanation_overrides(questions: list[dict[str, object]]) -> None:
         if not question or "高级工" not in question.get("levels", []):
             continue
 
-        explanations = question.setdefault("explanations", [])
+        # Advanced-level-3 PDF explanations are maintained as a reviewed,
+        # source-backed layer. Replace stale workbook/DOCX templates for
+        # questions covered by the override file instead of showing both.
+        explanations = []
+        question["explanations"] = explanations
         for entry in entries:
             text = clean(entry.get("text", ""))
             source_title = clean(entry.get("sourceTitle", ""))
@@ -569,7 +573,7 @@ def update_service_worker(data: dict[str, object]) -> None:
     urls.extend(f"./data/questions-{part_no:02d}.js" for part_no in range(1, chunk_count(data) + 1))
     block = "const APP_SHELL = [\n" + ",\n".join(f'  "{url}"' for url in urls) + "\n];"
     script = SERVICE_WORKER.read_text(encoding="utf-8")
-    script = re.sub(r'const CACHE_NAME = ".*?";', 'const CACHE_NAME = "power-trader-quiz-v23";', script)
+    script = re.sub(r'const CACHE_NAME = ".*?";', 'const CACHE_NAME = "power-trader-quiz-v24";', script)
     script = APP_SHELL_RE.sub(block, script)
     SERVICE_WORKER.write_text(script, encoding="utf-8")
 
