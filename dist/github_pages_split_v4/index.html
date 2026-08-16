@@ -1,0 +1,1556 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#14213d">
+  <title>电力交易刷题</title>
+  <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IueUteWKm+S6pOaYk+WRmOWIt+mimCI+CiAgPHJlY3Qgd2lkdGg9IjUxMiIgaGVpZ2h0PSI1MTIiIHJ4PSIxMTIiIGZpbGw9IiMxNDIxM2QiLz4KICA8cGF0aCBkPSJNMTM4IDExOGgyMzZjMjAgMCAzNiAxNiAzNiAzNnYyNDBjMCAyMC0xNiAzNi0zNiAzNkgxMzhjLTIwIDAtMzYtMTYtMzYtMzZWMTU0YzAtMjAgMTYtMzYgMzYtMzZaIiBmaWxsPSIjZjhmNGU4Ii8+CiAgPHBhdGggZD0iTTE1NCAxODRoMjA0TTE1NCAyNDZoMTMyTTE1NCAzMDhoMTc4IiBzdHJva2U9IiMxNDIxM2QiIHN0cm9rZS13aWR0aD0iMjgiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogIDxwYXRoIGQ9Ik0zMTYgMjIyIDI2MCAzMzJoNjJsLTIyIDcyIDgyLTEyNGgtNjJsMjgtNThoLTMyWiIgZmlsbD0iI2ZjYTMxMSIvPgogIDxjaXJjbGUgY3g9IjM3OCIgY3k9IjE1MCIgcj0iMzQiIGZpbGw9IiMyYTlkOGYiLz4KPC9zdmc+Cg==" type="image/svg+xml">
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #14213d;
+      --paper: #f8f4e8;
+      --panel: #fffdf6;
+      --line: #d9d1bf;
+      --muted: #6f6a60;
+      --green: #2a9d8f;
+      --amber: #fca311;
+      --red: #d1495b;
+      --blue: #277da1;
+      --shadow: 0 18px 50px rgba(20, 33, 61, .14);
+      font-family: "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        linear-gradient(90deg, rgba(20, 33, 61, .045) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(20, 33, 61, .035) 1px, transparent 1px),
+        var(--paper);
+      background-size: 22px 22px;
+      color: var(--ink);
+    }
+
+    button, input, select {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .app {
+      width: min(100%, 920px);
+      margin: 0 auto;
+      min-height: 100vh;
+      padding: env(safe-area-inset-top) 14px calc(16px + env(safe-area-inset-bottom));
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 0 10px;
+      background: linear-gradient(180deg, var(--paper) 78%, rgba(248, 244, 232, 0));
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .brand img {
+      width: 42px;
+      height: 42px;
+      flex: 0 0 auto;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-family: Georgia, "Songti SC", serif;
+      font-size: 20px;
+      line-height: 1.15;
+      letter-spacing: 0;
+    }
+
+    .brand p {
+      margin: 2px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 36px;
+      padding: 0 12px;
+      border-radius: 8px;
+      background: var(--ink);
+      color: white;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin: 8px 0 12px;
+    }
+
+    .stat {
+      min-height: 72px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 253, 246, .86);
+      box-shadow: 0 8px 20px rgba(20, 33, 61, .06);
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 22px;
+      line-height: 1.1;
+    }
+
+    .stat span {
+      display: block;
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    .view-switch {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 6px;
+      padding: 4px;
+      margin-bottom: 12px;
+      background: #ece3cf;
+    }
+
+    .view-switch button {
+      min-height: 42px;
+      border-radius: 7px;
+      background: transparent;
+      color: var(--ink);
+      font-weight: 800;
+      transition: transform .12s ease, background .12s ease, color .12s ease;
+    }
+
+    .view-switch button.active {
+      background: var(--ink);
+      color: white;
+    }
+
+    .controls {
+      display: grid;
+      gap: 10px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+
+    .segments {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(58px, 1fr));
+      gap: 6px;
+      padding: 4px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #ece3cf;
+    }
+
+    .segments button,
+    .filter button,
+    .scope-filter button,
+    .material-filter button,
+    .exam-source button,
+    .exam-material button,
+    .answer-sheet button,
+    .small-button {
+      min-height: 38px;
+      border-radius: 7px;
+      color: var(--ink);
+      background: transparent;
+      transition: transform .12s ease, background .12s ease, color .12s ease;
+    }
+
+    .segments button.active,
+    .filter button.active,
+    .scope-filter button.active,
+    .material-filter button.active,
+    .exam-source button.active {
+      background: var(--ink);
+      color: white;
+    }
+
+    .exam-material button.active {
+      background: var(--ink);
+      color: white;
+    }
+
+    .filter,
+    .scope-filter,
+    .material-filter,
+    .exam-source,
+    .exam-material {
+      display: grid;
+      gap: 6px;
+    }
+
+    .filter {
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    .scope-filter {
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    .exam-source {
+      grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
+    }
+
+    .material-filter,
+    .exam-material {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .filter button,
+    .scope-filter button,
+    .material-filter button,
+    .exam-source button,
+    .exam-material button {
+      border: 1px solid var(--line);
+      background: white;
+      font-size: 13px;
+    }
+
+    .search-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+    }
+
+    .search-row input {
+      width: 100%;
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: white;
+      color: var(--ink);
+      padding: 0 12px;
+      outline: none;
+    }
+
+    .small-button {
+      border: 1px solid var(--line);
+      background: white;
+      padding: 0 12px;
+    }
+
+    .small-button.compact {
+      min-height: 32px;
+      padding: 0 10px;
+      font-size: 12px;
+    }
+
+    .question {
+      overflow: hidden;
+    }
+
+    .question-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px;
+      border-bottom: 1px solid var(--line);
+      background: #fff8e6;
+    }
+
+    .tag-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 26px;
+      padding: 0 8px;
+      border-radius: 7px;
+      font-size: 12px;
+      font-weight: 700;
+      background: rgba(42, 157, 143, .12);
+      color: #16675e;
+    }
+
+    .tag.multi { background: rgba(252, 163, 17, .18); color: #8a5600; }
+    .tag.judge { background: rgba(39, 125, 161, .14); color: #17536c; }
+    .tag.scope { background: rgba(209, 73, 91, .10); color: #8c2736; }
+
+    .progress-text {
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .stem {
+      padding: 18px 14px 12px;
+      font-size: 20px;
+      line-height: 1.55;
+      font-weight: 800;
+      word-break: break-word;
+    }
+
+    .options {
+      display: grid;
+      gap: 10px;
+      padding: 0 14px 14px;
+    }
+
+    .option {
+      display: grid;
+      grid-template-columns: 36px 1fr;
+      align-items: start;
+      gap: 10px;
+      width: 100%;
+      min-height: 54px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: white;
+      color: var(--ink);
+      text-align: left;
+      transition: transform .12s ease, border-color .12s ease, background .12s ease;
+    }
+
+    .option:active,
+    .view-switch button:active,
+    .segments button:active,
+    .filter button:active,
+    .scope-filter button:active,
+    .material-filter button:active,
+    .exam-source button:active,
+    .exam-material button:active,
+    .answer-sheet button:active,
+    .small-button:active,
+    .primary:active,
+    .ghost:active {
+      transform: translateY(1px);
+    }
+
+    .option.selected {
+      border-color: var(--blue);
+      background: rgba(39, 125, 161, .09);
+    }
+
+    .option.correct {
+      border-color: var(--green);
+      background: rgba(42, 157, 143, .13);
+    }
+
+    .option.wrong {
+      border-color: var(--red);
+      background: rgba(209, 73, 91, .10);
+    }
+
+    .letter {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      background: var(--ink);
+      color: white;
+      font-weight: 800;
+    }
+
+    .option-text {
+      padding-top: 5px;
+      line-height: 1.45;
+      word-break: break-word;
+    }
+
+    .feedback {
+      margin: 0 14px 14px;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: #fff8e6;
+      line-height: 1.55;
+    }
+
+    .feedback.good {
+      border-color: rgba(42, 157, 143, .45);
+      background: rgba(42, 157, 143, .10);
+    }
+
+    .feedback.bad {
+      border-color: rgba(209, 73, 91, .45);
+      background: rgba(209, 73, 91, .10);
+    }
+
+    .explanation {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(20, 33, 61, .12);
+      color: var(--ink);
+      line-height: 1.65;
+    }
+
+    .explanation span {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .exam-rule,
+    .exam-history,
+    .exam-analysis,
+    .exam-summary {
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: white;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .exam-rule strong,
+    .exam-history strong,
+    .exam-analysis strong,
+    .exam-summary strong {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--ink);
+      font-size: 14px;
+    }
+
+    .exam-score {
+      padding: 22px 16px 12px;
+      text-align: center;
+    }
+
+    .exam-score strong {
+      display: block;
+      font-family: Georgia, "Songti SC", serif;
+      font-size: 52px;
+      line-height: 1;
+      color: var(--ink);
+    }
+
+    .exam-score span {
+      display: block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .exam-breakdown {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      padding: 0 14px 14px;
+    }
+
+    .exam-breakdown div {
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff8e6;
+      text-align: center;
+    }
+
+    .exam-breakdown strong {
+      display: block;
+      font-size: 18px;
+    }
+
+    .exam-breakdown span {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .answer-sheet {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(31px, 1fr));
+      gap: 5px;
+      padding: 0 14px 14px;
+    }
+
+    .answer-sheet button {
+      min-height: 32px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: white;
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .answer-sheet button.current {
+      border-color: var(--ink);
+      background: var(--ink);
+      color: white;
+    }
+
+    .answer-sheet button.answered {
+      border-color: rgba(42, 157, 143, .55);
+      background: rgba(42, 157, 143, .12);
+    }
+
+    .answer-sheet button.marked {
+      border-color: rgba(252, 163, 17, .8);
+      box-shadow: inset 0 -3px 0 rgba(252, 163, 17, .65);
+    }
+
+    .review-list {
+      display: grid;
+      gap: 10px;
+      padding: 0 14px 14px;
+    }
+
+    .review-item {
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: white;
+      line-height: 1.55;
+      font-size: 14px;
+    }
+
+    .review-item strong {
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .inline-actions {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      padding: 0 14px 14px;
+    }
+
+    .actions {
+      position: static;
+      z-index: 8;
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 12px;
+      padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
+      background: rgba(248, 244, 232, .94);
+      border-top: 1px solid var(--line);
+      backdrop-filter: blur(12px);
+    }
+
+    .primary,
+    .ghost {
+      min-height: 52px;
+      border-radius: 8px;
+      font-weight: 800;
+    }
+
+    .primary {
+      background: var(--amber);
+      color: #241706;
+    }
+
+    .primary:disabled {
+      opacity: .48;
+      cursor: not-allowed;
+    }
+
+    .ghost:disabled {
+      opacity: .48;
+      cursor: not-allowed;
+    }
+
+    .ghost {
+      border: 1px solid var(--line);
+      background: white;
+      color: var(--ink);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .empty {
+      padding: 28px 18px;
+      text-align: center;
+      line-height: 1.6;
+      color: var(--muted);
+    }
+
+    .drawer {
+      display: none;
+      margin-top: 12px;
+      padding: 12px;
+    }
+
+    .drawer.open {
+      display: block;
+    }
+
+    .drawer h2 {
+      margin: 0 0 8px;
+      font-size: 16px;
+    }
+
+    .drawer p {
+      margin: 8px 0;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 14px;
+    }
+
+    @media (min-width: 720px) {
+      .app {
+        padding-left: 24px;
+        padding-right: 24px;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        gap: 14px;
+        align-items: start;
+      }
+
+      .controls {
+        position: sticky;
+        top: 74px;
+      }
+
+      .stem {
+        font-size: 24px;
+        padding: 24px 22px 16px;
+      }
+
+      .options {
+        padding: 0 22px 22px;
+      }
+
+      .feedback {
+        margin: 0 22px 22px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IueUteWKm+S6pOaYk+WRmOWIt+mimCI+CiAgPHJlY3Qgd2lkdGg9IjUxMiIgaGVpZ2h0PSI1MTIiIHJ4PSIxMTIiIGZpbGw9IiMxNDIxM2QiLz4KICA8cGF0aCBkPSJNMTM4IDExOGgyMzZjMjAgMCAzNiAxNiAzNiAzNnYyNDBjMCAyMC0xNiAzNi0zNiAzNkgxMzhjLTIwIDAtMzYtMTYtMzYtMzZWMTU0YzAtMjAgMTYtMzYgMzYtMzZaIiBmaWxsPSIjZjhmNGU4Ii8+CiAgPHBhdGggZD0iTTE1NCAxODRoMjA0TTE1NCAyNDZoMTMyTTE1NCAzMDhoMTc4IiBzdHJva2U9IiMxNDIxM2QiIHN0cm9rZS13aWR0aD0iMjgiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogIDxwYXRoIGQ9Ik0zMTYgMjIyIDI2MCAzMzJoNjJsLTIyIDcyIDgyLTEyNGgtNjJsMjgtNThoLTMyWiIgZmlsbD0iI2ZjYTMxMSIvPgogIDxjaXJjbGUgY3g9IjM3OCIgY3k9IjE1MCIgcj0iMzQiIGZpbGw9IiMyYTlkOGYiLz4KPC9zdmc+Cg==" alt="">
+        <div>
+          <h1>电力交易刷题</h1>
+          <p id="metaText">题库加载中</p>
+        </div>
+      </div>
+    </header>
+
+    <section class="stats" aria-label="刷题统计">
+      <div class="stat"><strong id="doneCount">0</strong><span id="doneLabel">已答题</span></div>
+      <div class="stat"><strong id="accuracy">0%</strong><span id="accuracyLabel">正确率</span></div>
+      <div class="stat"><strong id="wrongCount">0</strong><span id="wrongLabel">错题本</span></div>
+    </section>
+
+    <section class="panel view-switch" aria-label="功能模式">
+      <button data-view="practice" class="active">日常刷题</button>
+      <button data-view="exam">模拟考试</button>
+    </section>
+
+    <main class="layout">
+      <section class="panel controls" id="practiceControls" aria-label="练习设置">
+        <div class="segments" role="tablist" aria-label="练习模式">
+          <button data-mode="random" class="active">随机</button>
+          <button data-mode="order">顺序</button>
+          <button data-mode="wrong">错题</button>
+          <button data-mode="favorite">收藏</button>
+          <button data-mode="weak">薄弱</button>
+        </div>
+        <div class="filter" aria-label="题型筛选">
+          <button data-filter="all" class="active">全部</button>
+          <button data-filter="单选">单选</button>
+          <button data-filter="多选">多选</button>
+          <button data-filter="判断">判断</button>
+        </div>
+        <div class="scope-filter" aria-label="题库来源筛选">
+          <button data-source="中级工">中级工</button>
+          <button data-source="高级工" class="active">高级工</button>
+          <button data-source="技师">技师</button>
+        </div>
+        <div class="material-filter" aria-label="题源筛选">
+          <button data-material="pdf" class="active">仅PDF样卷</button>
+        </div>
+        <div class="search-row">
+          <input id="searchInput" type="search" placeholder="搜索题干关键词">
+          <button class="small-button" id="resetButton">重置</button>
+        </div>
+      </section>
+
+      <section class="panel controls hidden" id="examControls" aria-label="模拟考试设置">
+        <div class="exam-rule">
+          <strong>模拟考试规则</strong>
+          单选 100 题，每题 0.5 分；多选 30 题，每题 1 分；判断 40 题，每题 0.5 分。共 170 题，满分 100 分，限时 120 分钟。
+        </div>
+        <div class="exam-source" aria-label="考试题库来源">
+          <button data-exam-source="中级工">中级工</button>
+          <button data-exam-source="高级工" class="active">高级工</button>
+          <button data-exam-source="技师">技师</button>
+        </div>
+        <div class="exam-material" aria-label="考试题源筛选">
+          <button data-exam-material="pdf" class="active">仅PDF样卷</button>
+        </div>
+        <button class="primary" id="startExamButton">开始模拟考试</button>
+        <div class="exam-analysis" id="examAnalysis"></div>
+        <div class="exam-history" id="examHistory"></div>
+      </section>
+
+      <section>
+        <article class="panel question" id="questionCard" aria-live="polite"></article>
+      </section>
+    </main>
+
+    <nav class="actions" aria-label="答题操作">
+      <button class="ghost" id="skipButton">跳过</button>
+      <button class="primary" id="submitButton" disabled>提交答案</button>
+    </nav>
+  </div>
+
+  <script src="data/meta.js"></script>
+  <script>window.QUESTION_PARTS = [];</script>
+  <script src="data/questions-01.js"></script>
+  <script src="data/questions-02.js"></script>
+  <script src="data/questions-03.js"></script>
+  <script src="data/questions-04.js"></script>
+  <script src="data/questions-05.js"></script>
+  <script src="data/questions-06.js"></script>
+  <script src="data/questions-07.js"></script>
+  <script src="data/questions-08.js"></script>
+  <script src="data/questions-09.js"></script>
+  <script src="data/questions-10.js"></script>
+  <script src="data/questions-11.js"></script>
+  <script src="data/questions-12.js"></script>
+  <script src="data/questions-13.js"></script>
+  <script src="data/questions-14.js"></script>
+  <script src="data/questions-15.js"></script>
+  <script src="data/questions-16.js"></script>
+  <script src="data/questions-17.js"></script>
+  <script src="data/questions-18.js"></script>
+  <script src="data/questions-19.js"></script>
+  <script src="data/questions-20.js"></script>
+  <script src="data/questions-21.js"></script>
+  <script src="data/questions-22.js"></script>
+  <script src="data/questions-23.js"></script>
+  <script src="data/questions-24.js"></script>
+  <script src="data/questions-25.js"></script>
+  <script src="data/questions-26.js"></script>
+  <script src="data/questions-27.js"></script>
+  <script>window.QUESTION_BANK = { meta: window.QUESTION_META, questions: window.QUESTION_PARTS.flat() };</script>
+  <script src="quiz-core.js"></script>
+  <script>
+    const STORAGE_KEY = "powerTraderQuizState.v2";
+    const EXAM_HISTORY_KEY = "powerTraderExamHistory.v1";
+    const bank = window.QUESTION_BANK || { meta: {}, questions: [] };
+    const questions = bank.questions;
+    const {
+      EXAM_RULE,
+      matchesSource,
+      matchesMaterial,
+      sourceLabel,
+      materialLabel,
+      sameAnswer,
+      scoreQuestion,
+      buildExamPaper,
+      summarizeExam,
+      formatDuration,
+      analyzeExamHistory
+    } = window.PowerQuizCore;
+    const state = {
+      view: "practice",
+      mode: "random",
+      filter: "all",
+      source: "高级工",
+      material: "pdf",
+      search: "",
+      current: null,
+      selected: new Set(),
+      submitted: false,
+      correct: false,
+      orderIndex: 0,
+      stats: loadStats(),
+      exam: {
+        source: "高级工",
+        material: "pdf",
+        status: "setup",
+        paper: [],
+        index: 0,
+        answers: {},
+        marked: [],
+        startedAt: null,
+        elapsedSeconds: 0,
+        result: null,
+        history: loadExamHistory()
+      }
+    };
+    let examTimer = null;
+
+    const els = {
+      metaText: document.getElementById("metaText"),
+      doneCount: document.getElementById("doneCount"),
+      doneLabel: document.getElementById("doneLabel"),
+      accuracy: document.getElementById("accuracy"),
+      accuracyLabel: document.getElementById("accuracyLabel"),
+      wrongCount: document.getElementById("wrongCount"),
+      wrongLabel: document.getElementById("wrongLabel"),
+      questionCard: document.getElementById("questionCard"),
+      submitButton: document.getElementById("submitButton"),
+      skipButton: document.getElementById("skipButton"),
+      resetButton: document.getElementById("resetButton"),
+      searchInput: document.getElementById("searchInput"),
+      actions: document.querySelector(".actions"),
+      practiceControls: document.getElementById("practiceControls"),
+      examControls: document.getElementById("examControls"),
+      startExamButton: document.getElementById("startExamButton"),
+      examHistory: document.getElementById("examHistory")
+      ,
+      examAnalysis: document.getElementById("examAnalysis")
+    };
+
+    function loadStats() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+        return {
+          answered: Number(saved.answered || 0),
+          correct: Number(saved.correct || 0),
+          wrongIds: Array.isArray(saved.wrongIds) ? saved.wrongIds : [],
+          favoriteIds: Array.isArray(saved.favoriteIds) ? saved.favoriteIds : [],
+          history: saved.history && typeof saved.history === "object" ? saved.history : {}
+        };
+      } catch {
+        return { answered: 0, correct: 0, wrongIds: [], favoriteIds: [], history: {} };
+      }
+    }
+
+    function saveStats() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.stats));
+    }
+
+    function loadExamHistory() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(EXAM_HISTORY_KEY) || "[]");
+        return Array.isArray(saved) ? saved : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function saveExamHistory() {
+      localStorage.setItem(EXAM_HISTORY_KEY, JSON.stringify(state.exam.history.slice(0, 10)));
+    }
+
+    function filteredQuestions() {
+      const term = state.search.trim();
+      return questions.filter((question) => {
+        const typeOk = state.filter === "all" || question.type === state.filter;
+        const sourceOk = matchesSource(question, state.source);
+        const materialOk = matchesMaterial(question, state.material, state.source);
+        const searchOk = !term || question.stem.includes(term);
+        const wrongOk = state.mode !== "wrong" || state.stats.wrongIds.includes(question.id);
+        const favoriteOk = state.mode !== "favorite" || state.stats.favoriteIds.includes(question.id);
+        const weakType = getWeakType();
+        const weakOk = state.mode !== "weak" || (weakType && question.type === weakType);
+        return typeOk && sourceOk && materialOk && searchOk && wrongOk && favoriteOk && weakOk;
+      });
+    }
+
+    function pickQuestion() {
+      const pool = filteredQuestions();
+      state.selected = new Set();
+      state.submitted = false;
+      state.correct = false;
+      if (!pool.length) {
+        state.current = null;
+        render();
+        return;
+      }
+
+      if (state.mode === "order") {
+        state.orderIndex = state.orderIndex % pool.length;
+        state.current = pool[state.orderIndex];
+        state.orderIndex += 1;
+      } else {
+        const index = Math.floor(Math.random() * pool.length);
+        state.current = pool[index];
+      }
+      render();
+    }
+
+    function setView(view) {
+      state.view = view;
+      document.querySelectorAll("[data-view]").forEach((button) => {
+        button.classList.toggle("active", button.dataset.view === view);
+      });
+      els.practiceControls.classList.toggle("hidden", view !== "practice");
+      els.examControls.classList.toggle("hidden", view !== "exam");
+      if (view === "practice" && !state.current) pickQuestion();
+      render();
+    }
+
+    function setMode(mode) {
+      state.mode = mode;
+      if (mode === "weak") state.filter = "all";
+      document.querySelectorAll("[data-mode]").forEach((button) => {
+        button.classList.toggle("active", button.dataset.mode === mode);
+      });
+      document.querySelectorAll("[data-filter]").forEach((button) => {
+        button.classList.toggle("active", button.dataset.filter === state.filter);
+      });
+      pickQuestion();
+    }
+
+    function setFilter(filter) {
+      state.filter = filter;
+      state.orderIndex = 0;
+      document.querySelectorAll("[data-filter]").forEach((button) => {
+        button.classList.toggle("active", button.dataset.filter === filter);
+      });
+      pickQuestion();
+    }
+
+    function setSource(source) {
+      state.source = source;
+      state.orderIndex = 0;
+      document.querySelectorAll("[data-source]").forEach((button) => {
+        button.classList.toggle("active", button.dataset.source === source);
+      });
+      pickQuestion();
+    }
+
+    function setMaterial(material) {
+      state.material = "pdf";
+      state.orderIndex = 0;
+      document.querySelectorAll("[data-material]").forEach((button) => {
+        button.classList.toggle("active", button.dataset.material === "pdf");
+      });
+      pickQuestion();
+    }
+
+    function setExamSource(source) {
+      if (state.exam.status === "active" && !confirm("当前模拟考试还未交卷，确认重新选择题库并结束本次考试？")) return;
+      stopExamTimer();
+      state.exam.source = source;
+      state.exam.status = "setup";
+      state.exam.paper = [];
+      state.exam.index = 0;
+      state.exam.answers = {};
+      state.exam.marked = [];
+      state.exam.startedAt = null;
+      state.exam.elapsedSeconds = 0;
+      state.exam.result = null;
+      document.querySelectorAll("[data-exam-source]").forEach((button) => {
+        button.classList.toggle("active", button.dataset.examSource === source);
+      });
+      render();
+    }
+
+    function setExamMaterial(material) {
+      if (state.exam.status === "active" && !confirm("当前模拟考试还未交卷，确认重新选择题源并结束本次考试？")) return;
+      stopExamTimer();
+      state.exam.material = "pdf";
+      state.exam.status = "setup";
+      state.exam.paper = [];
+      state.exam.index = 0;
+      state.exam.answers = {};
+      state.exam.marked = [];
+      state.exam.startedAt = null;
+      state.exam.elapsedSeconds = 0;
+      state.exam.result = null;
+      document.querySelectorAll("[data-exam-material]").forEach((button) => {
+        button.classList.toggle("active", button.dataset.examMaterial === "pdf");
+      });
+      render();
+    }
+
+    function selectOption(label) {
+      if (state.view === "exam" && state.exam.status === "active") {
+        const question = state.exam.paper[state.exam.index];
+        const selected = new Set(state.exam.answers[question.id] || []);
+        if (question.type === "多选") {
+          selected.has(label) ? selected.delete(label) : selected.add(label);
+        } else {
+          selected.clear();
+          selected.add(label);
+        }
+        if (selected.size) state.exam.answers[question.id] = Array.from(selected);
+        else delete state.exam.answers[question.id];
+        render();
+        return;
+      }
+
+      if (!state.current || state.submitted) return;
+      if (state.current.type === "多选") {
+        state.selected.has(label) ? state.selected.delete(label) : state.selected.add(label);
+      } else {
+        state.selected = new Set([label]);
+      }
+      render();
+    }
+
+    function submitAnswer() {
+      if (!state.current || !state.selected.size || state.submitted) return;
+      const correct = sameAnswer(Array.from(state.selected), state.current.answer);
+      state.submitted = true;
+      state.correct = correct;
+      state.stats.answered += 1;
+      if (correct) state.stats.correct += 1;
+      state.stats.history[state.current.id] = {
+        selected: Array.from(state.selected),
+        correct,
+        at: new Date().toISOString()
+      };
+      const wrongSet = new Set(state.stats.wrongIds);
+      correct ? wrongSet.delete(state.current.id) : wrongSet.add(state.current.id);
+      state.stats.wrongIds = Array.from(wrongSet);
+      saveStats();
+      render();
+    }
+
+    function resetStats() {
+      if (!confirm("确认清空本机刷题记录和错题本？")) return;
+      state.stats = { answered: 0, correct: 0, wrongIds: [], favoriteIds: [], history: {} };
+      saveStats();
+      pickQuestion();
+    }
+
+    function startExam() {
+      try {
+        state.exam.paper = buildExamPaper(questions, state.exam.source, "pdf");
+      } catch (error) {
+        alert(error.message);
+        return;
+      }
+      state.exam.status = "active";
+      state.exam.index = 0;
+      state.exam.answers = {};
+      state.exam.marked = [];
+      state.exam.startedAt = Date.now();
+      state.exam.elapsedSeconds = 0;
+      state.exam.result = null;
+      startExamTimer();
+      render();
+    }
+
+    function startExamTimer() {
+      stopExamTimer();
+      examTimer = setInterval(() => {
+        if (state.exam.status !== "active" || !state.exam.startedAt) return;
+        state.exam.elapsedSeconds = Math.floor((Date.now() - state.exam.startedAt) / 1000);
+        if (state.exam.elapsedSeconds >= EXAM_RULE.durationSeconds) {
+          submitExam(true);
+          alert("考试时间已到，已自动交卷。");
+          return;
+        }
+        renderStats();
+        const timer = document.getElementById("examTimer");
+        if (timer) timer.textContent = formatDuration(EXAM_RULE.durationSeconds - state.exam.elapsedSeconds);
+      }, 1000);
+    }
+
+    function stopExamTimer() {
+      if (examTimer) clearInterval(examTimer);
+      examTimer = null;
+    }
+
+    function goExamQuestion(index) {
+      state.exam.index = Math.max(0, Math.min(index, state.exam.paper.length - 1));
+      render();
+    }
+
+    function toggleExamMark() {
+      const question = state.exam.paper[state.exam.index];
+      const marked = new Set(state.exam.marked);
+      marked.has(question.id) ? marked.delete(question.id) : marked.add(question.id);
+      state.exam.marked = Array.from(marked);
+      render();
+    }
+
+    function submitExam(force = false) {
+      const unanswered = state.exam.paper.length - countExamAnswered();
+      if (!force && unanswered > 0 && !confirm(`还有 ${unanswered} 题未答，确认交卷？`)) return;
+      stopExamTimer();
+      state.exam.elapsedSeconds = state.exam.startedAt
+        ? Math.floor((Date.now() - state.exam.startedAt) / 1000)
+        : state.exam.elapsedSeconds;
+      const summary = summarizeExam(state.exam.paper, state.exam.answers);
+      const details = state.exam.paper.map((question, index) => {
+        const selected = state.exam.answers[question.id] || [];
+        const score = scoreQuestion(question, selected);
+        const max = maxQuestionScore(question);
+        return { question, index, selected, score, max };
+      });
+      state.exam.result = {
+        ...summary,
+        details,
+        source: state.exam.source,
+        material: state.exam.material,
+        duration: state.exam.elapsedSeconds,
+        submittedAt: new Date().toISOString()
+      };
+      updateWrongBookFromExam(details);
+      state.exam.status = "result";
+      state.exam.history.unshift({
+        source: state.exam.source,
+        material: state.exam.material,
+        score: summary.total,
+        byType: summary.byType,
+        duration: state.exam.elapsedSeconds,
+        at: state.exam.result.submittedAt
+      });
+      state.exam.history = state.exam.history.slice(0, 10);
+      saveExamHistory();
+      render();
+    }
+
+    function updateWrongBookFromExam(details) {
+      const wrongSet = new Set(state.stats.wrongIds);
+      details.forEach((item) => {
+        const correct = item.score === item.max;
+        state.stats.history[item.question.id] = {
+          selected: item.selected,
+          correct,
+          at: state.exam.result.submittedAt,
+          source: "exam"
+        };
+        correct ? wrongSet.delete(item.question.id) : wrongSet.add(item.question.id);
+      });
+      state.stats.wrongIds = Array.from(wrongSet);
+      saveStats();
+    }
+
+    function countExamAnswered() {
+      return state.exam.paper.filter((question) => (state.exam.answers[question.id] || []).length).length;
+    }
+
+    function maxQuestionScore(question) {
+      const rule = EXAM_RULE.sections.find((section) => section.type === question.type);
+      return rule ? rule.points : 0;
+    }
+
+    function getWeakType() {
+      return analyzeExamHistory(state.exam.history).weakType;
+    }
+
+    function toggleFavorite(question) {
+      const favoriteSet = new Set(state.stats.favoriteIds);
+      favoriteSet.has(question.id) ? favoriteSet.delete(question.id) : favoriteSet.add(question.id);
+      state.stats.favoriteIds = Array.from(favoriteSet);
+      saveStats();
+      render();
+    }
+
+    function answerText(question) {
+      if (question.type === "判断") return question.answer.join("");
+      return question.answer.map((label) => {
+        const option = question.options.find((item) => item.label === label);
+        return option ? `${label}. ${option.text}` : label;
+      }).join("；");
+    }
+
+    function selectedAnswerText(question, selected) {
+      if (!selected.length) return "未作答";
+      if (question.type === "判断") return selected.join("");
+      return selected.map((label) => {
+        const option = question.options.find((item) => item.label === label);
+        return option ? `${label}. ${option.text}` : label;
+      }).join("；");
+    }
+
+    function explanationHtml(question) {
+      const explanations = Array.isArray(question.explanations) ? question.explanations.filter(Boolean) : [];
+      const text = explanations.length ? explanations.join("\n") : "暂无解析。";
+      return `<div class="explanation"><span>解析</span>${escapeHtml(text).replaceAll("\n", "<br>")}</div>`;
+    }
+
+    function renderStats() {
+      if (state.view === "exam") {
+        renderExamStats();
+        return;
+      }
+
+      const answered = state.stats.answered;
+      els.doneLabel.textContent = "已答题";
+      els.accuracyLabel.textContent = "正确率";
+      els.wrongLabel.textContent = state.mode === "favorite" ? "收藏题" : "错题本";
+      els.doneCount.textContent = answered;
+      els.accuracy.textContent = answered ? `${Math.round(state.stats.correct / answered * 100)}%` : "0%";
+      els.wrongCount.textContent = state.mode === "favorite" ? state.stats.favoriteIds.length : state.stats.wrongIds.length;
+      const weakType = state.mode === "weak" ? getWeakType() : "";
+      const label = `${sourceLabel(state.source)} · ${materialLabel(state.material)}`;
+      els.metaText.textContent = weakType
+        ? `${label} · 薄弱项：${weakType}`
+        : `${label} · ${countBySource(state.source, state.material)} 道去重题`;
+    }
+
+    function renderExamStats() {
+      els.metaText.textContent = `${sourceLabel(state.exam.source)} · ${materialLabel(state.exam.material)} · 模拟考试`;
+      if (state.exam.status === "active") {
+        els.doneLabel.textContent = "已答题";
+        els.accuracyLabel.textContent = "剩余";
+        els.wrongLabel.textContent = "标记";
+        els.doneCount.textContent = `${countExamAnswered()}/${state.exam.paper.length}`;
+        els.accuracy.textContent = formatDuration(EXAM_RULE.durationSeconds - state.exam.elapsedSeconds);
+        els.wrongCount.textContent = state.exam.marked.length;
+        return;
+      }
+
+      if (state.exam.status === "result" && state.exam.result) {
+        const deductCount = state.exam.result.details.filter((item) => item.score < item.max).length;
+        els.doneLabel.textContent = "本次得分";
+        els.accuracyLabel.textContent = "用时";
+        els.wrongLabel.textContent = "扣分题";
+        els.doneCount.textContent = state.exam.result.total;
+        els.accuracy.textContent = formatDuration(state.exam.result.duration);
+        els.wrongCount.textContent = deductCount;
+        return;
+      }
+
+      els.doneLabel.textContent = "题量";
+      els.accuracyLabel.textContent = "满分";
+      els.wrongLabel.textContent = "模考记录";
+      els.doneCount.textContent = EXAM_RULE.sections.reduce((sum, section) => sum + section.count, 0);
+      els.accuracy.textContent = 100;
+      els.wrongCount.textContent = state.exam.history.length;
+    }
+
+    function countBySource(source, material = "all") {
+      return questions.filter((question) => matchesSource(question, source) && matchesMaterial(question, "pdf", source)).length;
+    }
+
+    function renderQuestion() {
+      if (state.view === "exam") {
+        renderExam();
+        return;
+      }
+
+      els.actions.classList.remove("hidden");
+      els.skipButton.disabled = false;
+      els.skipButton.textContent = "跳过";
+      const question = state.current;
+      const poolCount = filteredQuestions().length;
+      if (!question) {
+        const emptyText = state.mode === "weak"
+          ? "还没有足够的模拟考试记录判断薄弱项。先完成一套模拟考试后再来练薄弱项。"
+          : "当前条件下没有题目。可以切回全部题型，或先完成一些错题/收藏题后再进入对应模式。";
+        els.questionCard.innerHTML = `<div class="empty">${emptyText}</div>`;
+        els.submitButton.disabled = true;
+        els.submitButton.textContent = "提交答案";
+        return;
+      }
+
+      const tagClass = question.type === "多选" ? "multi" : question.type === "判断" ? "judge" : "";
+      const isFavorite = state.stats.favoriteIds.includes(question.id);
+      const optionsHtml = question.options.map((option) => {
+        const selected = state.selected.has(option.label);
+        const isRight = question.answer.includes(option.label);
+        const isWrongPick = state.submitted && selected && !isRight;
+        const classes = [
+          "option",
+          selected ? "selected" : "",
+          state.submitted && isRight ? "correct" : "",
+          isWrongPick ? "wrong" : ""
+        ].filter(Boolean).join(" ");
+        return `
+          <button class="${classes}" data-option="${option.label}" aria-pressed="${selected}">
+            <span class="letter">${option.label}</span>
+            <span class="option-text">${escapeHtml(option.text)}</span>
+          </button>`;
+      }).join("");
+
+      const feedback = state.submitted
+        ? `<div class="feedback ${state.correct ? "good" : "bad"}">
+            <strong>${state.correct ? "答对了" : "答错了"}</strong><br>
+            正确答案：${escapeHtml(answerText(question))}
+            ${explanationHtml(question)}
+          </div>`
+        : "";
+
+      els.questionCard.innerHTML = `
+        <div class="question-head">
+          <div class="tag-row">
+            <span class="tag ${tagClass}">${question.type}</span>
+            <span class="tag scope">${sourceLabel(state.source)}</span>
+            <span class="tag">${materialLabel(state.material)}</span>
+          </div>
+          <button class="small-button compact" id="favoriteButton">${isFavorite ? "取消收藏" : "收藏"}</button>
+        </div>
+        <div class="question-head">
+          <span class="progress-text">${poolCount} 题可练</span>
+          <span class="progress-text">${state.mode === "weak" ? `薄弱项：${getWeakType()}` : ""}</span>
+        </div>
+        <div class="stem">${escapeHtml(question.stem)}</div>
+        <div class="options">${optionsHtml}</div>
+        ${feedback}`;
+
+      els.questionCard.querySelectorAll("[data-option]").forEach((button) => {
+        button.addEventListener("click", () => selectOption(button.dataset.option));
+      });
+      document.getElementById("favoriteButton").addEventListener("click", () => toggleFavorite(question));
+      els.submitButton.disabled = !state.selected.size;
+      els.submitButton.textContent = state.submitted ? "下一题" : "提交答案";
+    }
+
+    function renderExam() {
+      renderExamHistory();
+      if (state.exam.status === "active") renderExamQuestion();
+      else if (state.exam.status === "result") renderExamResult();
+      else renderExamSetup();
+    }
+
+    function renderExamSetup() {
+      els.actions.classList.add("hidden");
+      const counts = EXAM_RULE.sections.map((section) => `${section.type}${section.count}题`).join(" · ");
+      els.questionCard.innerHTML = `
+        <div class="question-head">
+          <div class="tag-row">
+            <span class="tag scope">${sourceLabel(state.exam.source)}</span>
+            <span class="tag">${materialLabel(state.exam.material)}</span>
+            <span class="tag">模拟考试</span>
+          </div>
+          <span class="progress-text">满分 100</span>
+        </div>
+        <div class="stem">准备开始一套完整模拟考试</div>
+        <div class="exam-summary">
+          <strong>${counts}</strong>
+          考试时长 120 分钟。多选题全部选对得 1 分，漏选或错选不得分。
+        </div>`;
+    }
+
+    function renderExamQuestion() {
+      els.actions.classList.remove("hidden");
+      const question = state.exam.paper[state.exam.index];
+      const selectedSet = new Set(state.exam.answers[question.id] || []);
+      const isMarked = state.exam.marked.includes(question.id);
+      const tagClass = question.type === "多选" ? "multi" : question.type === "判断" ? "judge" : "";
+      const optionsHtml = question.options.map((option) => {
+        const selected = selectedSet.has(option.label);
+        const classes = ["option", selected ? "selected" : ""].filter(Boolean).join(" ");
+        return `
+          <button class="${classes}" data-option="${option.label}" aria-pressed="${selected}">
+            <span class="letter">${option.label}</span>
+            <span class="option-text">${escapeHtml(option.text)}</span>
+          </button>`;
+      }).join("");
+      const sheetHtml = state.exam.paper.map((item, index) => {
+        const classes = [
+          index === state.exam.index ? "current" : "",
+          (state.exam.answers[item.id] || []).length ? "answered" : "",
+          state.exam.marked.includes(item.id) ? "marked" : ""
+        ].filter(Boolean).join(" ");
+        return `<button class="${classes}" data-exam-index="${index}" aria-label="第${index + 1}题">${index + 1}</button>`;
+      }).join("");
+
+      els.questionCard.innerHTML = `
+        <div class="question-head">
+          <div class="tag-row">
+            <span class="tag ${tagClass}">${question.type}</span>
+            <span class="tag scope">${sourceLabel(state.exam.source)}</span>
+            <span class="tag">${materialLabel(state.exam.material)}</span>
+            <span class="tag">第 ${state.exam.index + 1} / ${state.exam.paper.length} 题</span>
+          </div>
+          <button class="small-button compact" id="markExamButton">${isMarked ? "取消标记" : "标记"}</button>
+        </div>
+        <div class="question-head">
+          <span class="progress-text">剩余 <span id="examTimer">${formatDuration(EXAM_RULE.durationSeconds - state.exam.elapsedSeconds)}</span></span>
+          <span class="progress-text">${maxQuestionScore(question)} 分</span>
+        </div>
+        <div class="stem">${escapeHtml(question.stem)}</div>
+        <div class="options">${optionsHtml}</div>
+        <div class="answer-sheet">${sheetHtml}</div>`;
+
+      els.questionCard.querySelectorAll("[data-option]").forEach((button) => {
+        button.addEventListener("click", () => selectOption(button.dataset.option));
+      });
+      els.questionCard.querySelectorAll("[data-exam-index]").forEach((button) => {
+        button.addEventListener("click", () => goExamQuestion(Number(button.dataset.examIndex)));
+      });
+      document.getElementById("markExamButton").addEventListener("click", toggleExamMark);
+      els.skipButton.textContent = "上一题";
+      els.skipButton.disabled = state.exam.index === 0;
+      els.submitButton.disabled = false;
+      els.submitButton.textContent = state.exam.index === state.exam.paper.length - 1 ? "交卷" : "下一题";
+    }
+
+    function renderExamResult() {
+      els.actions.classList.add("hidden");
+      const result = state.exam.result;
+      const deductItems = result.details.filter((item) => item.score < item.max);
+      const breakdownHtml = EXAM_RULE.sections.map((section) => {
+        const item = result.byType[section.type];
+        return `<div><strong>${item.score}/${item.max}</strong><span>${section.type}</span></div>`;
+      }).join("");
+      const reviewHtml = deductItems.length
+        ? deductItems.map((item) => `
+          <div class="review-item">
+            <strong>${item.index + 1}. ${escapeHtml(item.question.stem)}</strong>
+            你的答案：${escapeHtml(selectedAnswerText(item.question, item.selected))}<br>
+            正确答案：${escapeHtml(answerText(item.question))}<br>
+            得分：${item.score}/${item.max}<br>
+            ${explanationHtml(item.question)}
+            已自动加入错题本
+          </div>`).join("")
+        : `<div class="review-item"><strong>本次没有扣分题</strong>这套卷子全部拿分。</div>`;
+
+      els.questionCard.innerHTML = `
+        <div class="question-head">
+          <div class="tag-row">
+            <span class="tag scope">${sourceLabel(result.source)}</span>
+            <span class="tag">${materialLabel(result.material)}</span>
+            <span class="tag">模拟考试结果</span>
+          </div>
+          <span class="progress-text">${formatDuration(result.duration)}</span>
+        </div>
+        <div class="exam-score">
+          <strong>${result.total}</strong>
+          <span>满分 ${result.max} · 已答 ${result.answered}/${state.exam.paper.length}</span>
+        </div>
+        <div class="exam-breakdown">${breakdownHtml}</div>
+        <div class="inline-actions">
+          <button class="ghost" id="backPracticeButton">日常刷题</button>
+          <button class="primary" id="restartExamButton">再考一套</button>
+        </div>
+        <div class="review-list">${reviewHtml}</div>`;
+
+      document.getElementById("restartExamButton").addEventListener("click", startExam);
+      document.getElementById("backPracticeButton").addEventListener("click", () => setView("practice"));
+    }
+
+    function renderExamHistory() {
+      renderExamAnalysis();
+      if (!state.exam.history.length) {
+        els.examHistory.innerHTML = `<strong>最近成绩</strong>还没有模拟考试记录。`;
+        return;
+      }
+      const items = state.exam.history.slice(0, 5).map((item) => {
+        const date = new Date(item.at);
+        const label = Number.isNaN(date.getTime()) ? "" : `${date.getMonth() + 1}/${date.getDate()} ${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+        return `${label} · ${item.source} · ${materialLabel(item.material)} · ${item.score}分 · ${formatDuration(item.duration)}`;
+      }).join("<br>");
+      els.examHistory.innerHTML = `<strong>最近成绩</strong>${items}`;
+    }
+
+    function renderExamAnalysis() {
+      const analysis = analyzeExamHistory(state.exam.history);
+      if (!analysis.count) {
+        els.examAnalysis.innerHTML = `<strong>成绩分析</strong>完成模拟考试后显示平均分、最高分、最低分和薄弱题型。`;
+        return;
+      }
+      const typeText = Object.entries(analysis.byType)
+        .filter(([, item]) => item.max > 0)
+        .map(([type, item]) => `${type}${item.percent}%`)
+        .join(" · ");
+      els.examAnalysis.innerHTML = `<strong>成绩分析</strong>近 ${analysis.count} 次：平均 ${analysis.average} 分，最高 ${analysis.best} 分，最低 ${analysis.worst} 分。薄弱项：${analysis.weakType || "暂无"}。<br>${typeText}`;
+    }
+
+    function render() {
+      renderStats();
+      renderQuestion();
+    }
+
+    function escapeHtml(text) {
+      return String(text)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    document.querySelectorAll("[data-view]").forEach((button) => {
+      button.addEventListener("click", () => setView(button.dataset.view));
+    });
+
+    document.querySelectorAll("[data-mode]").forEach((button) => {
+      button.addEventListener("click", () => setMode(button.dataset.mode));
+    });
+
+    document.querySelectorAll("[data-filter]").forEach((button) => {
+      button.addEventListener("click", () => setFilter(button.dataset.filter));
+    });
+
+    document.querySelectorAll("[data-source]").forEach((button) => {
+      button.addEventListener("click", () => setSource(button.dataset.source));
+    });
+
+    document.querySelectorAll("[data-material]").forEach((button) => {
+      button.addEventListener("click", () => setMaterial(button.dataset.material));
+    });
+
+    document.querySelectorAll("[data-exam-source]").forEach((button) => {
+      button.addEventListener("click", () => setExamSource(button.dataset.examSource));
+    });
+
+    document.querySelectorAll("[data-exam-material]").forEach((button) => {
+      button.addEventListener("click", () => setExamMaterial(button.dataset.examMaterial));
+    });
+
+    els.startExamButton.addEventListener("click", startExam);
+
+    els.submitButton.addEventListener("click", () => {
+      if (state.view === "exam" && state.exam.status === "active") {
+        if (state.exam.index === state.exam.paper.length - 1) submitExam();
+        else goExamQuestion(state.exam.index + 1);
+        return;
+      }
+      if (state.submitted) pickQuestion();
+      else submitAnswer();
+    });
+
+    els.skipButton.addEventListener("click", () => {
+      if (state.view === "exam" && state.exam.status === "active") goExamQuestion(state.exam.index - 1);
+      else pickQuestion();
+    });
+    els.resetButton.addEventListener("click", resetStats);
+    els.searchInput.addEventListener("input", (event) => {
+      state.search = event.target.value;
+      state.orderIndex = 0;
+      pickQuestion();
+    });
+
+
+    pickQuestion();
+  </script>
+</body>
+</html>
