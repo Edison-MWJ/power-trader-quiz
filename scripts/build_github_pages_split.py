@@ -14,7 +14,7 @@ INDEX = ROOT / "index.html"
 QUESTIONS = ROOT / "data" / "questions.js"
 ICON = ROOT / "icon.svg"
 CORE = ROOT / "quiz-core.js"
-OUTPUT = ROOT / "dist" / "github_pages_split_v2"
+OUTPUT = ROOT / "dist" / "github_pages_split_v3"
 CHUNK_SIZE = 180
 
 
