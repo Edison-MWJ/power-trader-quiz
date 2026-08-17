@@ -1198,7 +1198,12 @@
       }).join("；");
     }
 
+    // Explanations remain in the data bank for future review, but are hidden
+    // from the current practice and exam-review UI at the user's request.
+    const SHOW_EXPLANATIONS = false;
+
     function explanationHtml(question) {
+      if (!SHOW_EXPLANATIONS) return "";
       const explanations = Array.isArray(question.explanations) ? question.explanations.filter(Boolean) : [];
       const text = explanations.length ? explanations.join("\n") : "暂无解析。";
       return `<div class="explanation"><span>解析</span>${escapeHtml(text).replaceAll("\n", "<br>")}</div>`;
